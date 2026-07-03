@@ -35,6 +35,11 @@ class Settings:
     default_model: str = os.environ.get("LAP_MODEL", "llama3.2:3b")
     embedding_model: str = os.environ.get("LAP_EMBEDDING_MODEL", "nomic-embed-text")
 
+    # Auto-routing tiers: the small model most requests land on, and the
+    # larger model reserved for reasoning-heavy or long-input tasks.
+    fast_model: str = os.environ.get("LAP_MODEL_FAST", "llama3.2:3b")
+    quality_model: str = os.environ.get("LAP_MODEL_QUALITY", "qwen2.5:7b")
+
     # Privacy: local_only blocks every non-localhost provider. Cloud mode must
     # be enabled explicitly by the user — never by code.
     allow_cloud: bool = field(default_factory=lambda: _env_bool("LAP_ALLOW_CLOUD", False))

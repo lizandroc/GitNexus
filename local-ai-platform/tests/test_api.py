@@ -7,19 +7,8 @@ indexing → RAG query with citations, all three tools, and usage logging.
 from __future__ import annotations
 
 import io
-import os
-import sys
-import tempfile
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-_tmp = tempfile.mkdtemp(prefix="lap-test-")
-os.environ["LAP_DATA_DIR"] = _tmp
-os.environ["LAP_PROVIDER"] = "mock"
-os.environ["LAP_MODEL"] = "mock-small"
 
 from fastapi.testclient import TestClient  # noqa: E402
 

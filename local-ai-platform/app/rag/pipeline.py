@@ -13,7 +13,7 @@ from typing import Any, Optional
 
 from ..config import settings
 from ..db import get_conn, new_id, record_run
-from ..providers import ChatMessage, active_model, get_provider
+from ..providers import ChatMessage, get_provider, resolve_model
 from . import store
 from .chunker import chunk_text
 from .extract import extract_text
@@ -79,7 +79,8 @@ async def answer_question(
 ) -> dict[str, Any]:
     """Retrieve relevant chunks and generate a grounded, cited answer."""
     provider = get_provider()
-    model = model or active_model()
+    model, routing = resolve_model("rag_query", input_chars=len(question),
+                                   text=question, explicit=model)
     embed_model = settings.embedding_model if provider.name != "mock" else "mock-embed"
     top_k = top_k or settings.top_k
 
@@ -93,6 +94,7 @@ async def answer_question(
             "sources": [],
             "model": model,
             "provider": provider.name,
+            "routing": routing,
         }
 
     context = "\n\n".join(
@@ -123,5 +125,6 @@ async def answer_question(
         ],
         "model": model,
         "provider": provider.name,
+        "routing": routing,
         "latency_ms": latency_ms,
     }

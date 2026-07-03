@@ -55,7 +55,25 @@ def active_model() -> str:
     return get_setting("active_model", settings.default_model)
 
 
+def auto_route_enabled() -> bool:
+    return get_setting("auto_route", "on") == "on"
+
+
+def resolve_model(kind: str, input_chars: int = 0, text: str = "",
+                  explicit: str | None = None) -> tuple[str, str]:
+    """Decide which model serves a request: an explicitly requested model
+    always wins; otherwise auto-routing picks the cheapest fitting tier;
+    with routing off, the user's active model is used."""
+    if explicit:
+        return explicit, "explicit model requested"
+    if not auto_route_enabled():
+        return active_model(), "active model (auto-routing off)"
+    from ..routing import pick_model
+    return pick_model(kind, input_chars=input_chars, text=text)
+
+
 __all__ = [
     "ChatMessage", "ChatResult", "ModelInfo", "Provider", "ProviderError",
     "get_provider", "all_providers", "active_model", "cloud_enabled",
+    "auto_route_enabled", "resolve_model",
 ]

@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from ..providers import ChatMessage, active_model, get_provider
+from ..providers import ChatMessage, get_provider, resolve_model
 
 
 @dataclass
@@ -55,14 +55,18 @@ class PromptTool(Tool):
         safe = {k: str(inputs.get(k, "")) for k in self.spec.inputs}
         user_prompt = self.user_template.format(**safe)
         provider = get_provider()
+        chosen, routing = resolve_model(f"tool:{self.spec.name}",
+                                        input_chars=len(user_prompt),
+                                        text=user_prompt, explicit=model)
         result = await provider.chat(
             [ChatMessage("system", self.system_prompt), ChatMessage("user", user_prompt)],
-            model or active_model(),
+            chosen,
             temperature=self.temperature,
         )
         return {
             "output": result.text,
             "model": result.model,
             "provider": result.provider,
+            "routing": routing,
             "latency_ms": result.latency_ms,
         }

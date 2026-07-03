@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from ..db import record_run
-from ..providers import ChatMessage, ProviderError, active_model, get_provider
+from ..providers import ChatMessage, ProviderError, get_provider, resolve_model
 
 router = APIRouter(prefix="/v1", tags=["ai"])
 
@@ -41,20 +41,24 @@ async def _run_chat(kind: str, messages: list[ChatMessage], body_model: Optional
                     body_provider: Optional[str], temperature: float = 0.2,
                     max_tokens: Optional[int] = None) -> dict[str, Any]:
     start = time.monotonic()
+    input_chars = sum(len(m.content) for m in messages)
+    user_text = " ".join(m.content for m in messages if m.role == "user")
+    model, routing = resolve_model(kind, input_chars=input_chars, text=user_text,
+                                   explicit=body_model)
     try:
         provider = get_provider(body_provider)
-        model = body_model or active_model()
         result = await provider.chat(messages, model, temperature=temperature, max_tokens=max_tokens)
     except ProviderError as e:
         record_run(kind, status="error", error=str(e)[:500])
         raise HTTPException(status_code=502, detail=str(e))
     latency_ms = int((time.monotonic() - start) * 1000)
     record_run(kind, provider=result.provider, model=result.model, latency_ms=latency_ms,
-               input_chars=sum(len(m.content) for m in messages), output_chars=len(result.text))
+               input_chars=input_chars, output_chars=len(result.text))
     return {
         "output": result.text,
         "model": result.model,
         "provider": result.provider,
+        "routing": routing,
         "latency_ms": latency_ms,
         "prompt_tokens": result.prompt_tokens,
         "completion_tokens": result.completion_tokens,

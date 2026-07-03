@@ -57,7 +57,14 @@ async def auth_and_log(request: Request, call_next):
 
 
 @app.get("/", include_in_schema=False)
-def dashboard() -> FileResponse:
+def workspace() -> FileResponse:
+    """End-user workspace: chat, document Q&A, and tools."""
+    return FileResponse(STATIC_DIR / "workspace.html")
+
+
+@app.get("/ops", include_in_schema=False)
+def ops_dashboard() -> FileResponse:
+    """Operations dashboard: models, documents, runs, privacy controls."""
     return FileResponse(STATIC_DIR / "index.html")
 
 

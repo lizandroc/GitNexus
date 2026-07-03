@@ -12,7 +12,7 @@ cd local-ai-platform
 ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8130
 ```
 
-Open the dashboard at **http://127.0.0.1:8130** and the interactive API docs at **http://127.0.0.1:8130/docs**.
+Open the **user workspace** (chat, document Q&A, tools) at **http://127.0.0.1:8130**, the **operations dashboard** (models, documents, runs, privacy) at **/ops**, and the interactive API docs at **/docs**.
 
 No Ollama yet? Try everything with the offline mock provider:
 
@@ -31,8 +31,13 @@ LAP_PROVIDER=mock LAP_MODEL=mock-small ./.venv/bin/uvicorn app.main:app --port 8
 | Run business tools | `GET /v1/tools` · `POST /v1/tools/{name}/run` |
 | Models: list, switch, speed-test | `GET /v1/models` · `POST /v1/models/select` · `/v1/models/benchmark` |
 | Status, privacy mode, usage | `GET /v1/status` · `POST /v1/privacy` · `GET /v1/runs` |
+| Auto model routing toggle | `POST /v1/routing` `{"auto": true/false}` |
 
 Built-in tools: **Private Document Q&A** (RAG-backed), **Email/Conversation Analyzer**, **Business Workflow Prompt Runner** (presets: `contract_summary`, `crm_note`, `report_draft`, or custom steps).
+
+## Auto model routing (saves tokens)
+
+On by default. Requests that don't name a model are routed to the cheapest model that fits: structured tasks (classify/extract), short chat, and short factual lookups go to the **fast tier** (`LAP_MODEL_FAST`, default `llama3.2:3b`); long inputs, reasoning-cued prompts, and multi-step workflows go to the **quality tier** (`LAP_MODEL_QUALITY`, default `qwen2.5:7b`). The routing decision costs zero tokens (pure heuristics) and every response reports which model was used and why (`"routing": "fast tier: short, direct task"`). Toggle it in the workspace header or via `POST /v1/routing`; an explicit `"model"` in any request always wins.
 
 ## Calling it from your own apps
 

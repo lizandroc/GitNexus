@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from ..config import settings
 from ..db import get_conn, get_setting, recent_runs, record_run, set_setting, usage_stats
 from ..providers import (ChatMessage, ProviderError, active_model, all_providers,
-                         cloud_enabled, get_provider)
+                         auto_route_enabled, cloud_enabled, get_provider)
 
 router = APIRouter(prefix="/v1", tags=["system"])
 
@@ -30,6 +30,11 @@ async def status() -> dict[str, Any]:
         "active_provider": get_setting("active_provider", settings.default_provider),
         "active_model": active_model(),
         "embedding_model": settings.embedding_model,
+        "routing": {
+            "auto": auto_route_enabled(),
+            "fast_model": settings.fast_model,
+            "quality_model": settings.quality_model,
+        },
         "privacy": {
             "mode": "cloud-enabled" if cloud_enabled() else "local-only",
             "cloud_allowed_by_env": settings.allow_cloud,
@@ -102,6 +107,23 @@ async def benchmark(body: BenchmarkIn) -> dict[str, Any]:
     return {"provider": result.provider, "model": model, "latency_ms": latency_ms,
             "completion_tokens": result.completion_tokens, "tokens_per_second": tokens_per_s,
             "sample": result.text[:200]}
+
+
+class RoutingIn(BaseModel):
+    auto: bool
+
+
+@router.post("/routing")
+def set_routing(body: RoutingIn) -> dict[str, Any]:
+    """Toggle auto model routing. On: each request gets the cheapest model
+    that fits the task (saves tokens/compute). Off: every request uses the
+    manually selected active model."""
+    set_setting("auto_route", "on" if body.auto else "off")
+    return {
+        "auto": auto_route_enabled(),
+        "fast_model": settings.fast_model,
+        "quality_model": settings.quality_model,
+    }
 
 
 class PrivacyIn(BaseModel):

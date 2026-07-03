@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local AI — Workspace</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#151a22; --panel2:#1c232e; --border:#28303e;
+    --text:#e8edf4; --muted:#8c97a9; --accent:#4f8ef7; --accent-soft:rgba(79,142,247,.14);
+    --ok:#3fb96f; --warn:#d9a13b; --bad:#e05d5d;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:flex}
+
+  /* ── Sidebar ─────────────────────────────────────────────── */
+  aside{width:250px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--panel)}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;font-weight:650;font-size:.95rem}
+  .brand .logo{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px}
+  nav{padding:6px 10px}
+  .navbtn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;margin:2px 0;border:0;border-radius:10px;background:transparent;color:var(--muted);font:inherit;font-size:.9rem;cursor:pointer;text-align:left}
+  .navbtn:hover{background:var(--panel2);color:var(--text)}
+  .navbtn.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .sidebox{margin:10px 14px;padding:12px;border:1px solid var(--border);border-radius:12px}
+  .sidebox h4{margin:0 0 8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .sidebox select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 9px;font:inherit;font-size:.85rem}
+  .kbcount{font-size:.78rem;color:var(--muted);margin-top:6px}
+  .side-spacer{flex:1}
+  .sidefoot{padding:14px;border-top:1px solid var(--border);font-size:.78rem}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:600;border:1px solid var(--border)}
+  .pill.local{color:var(--ok);border-color:rgba(63,185,111,.4);background:rgba(63,185,111,.08)}
+  .pill.cloud{color:var(--warn);border-color:rgba(217,161,59,.4);background:rgba(217,161,59,.08)}
+  .sidefoot a{color:var(--muted);text-decoration:none;display:inline-block;margin-top:10px}
+  .sidefoot a:hover{color:var(--text)}
+
+  /* ── Main column ─────────────────────────────────────────── */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border)}
+  header h1{font-size:1rem;margin:0;font-weight:650}
+  header .sub{font-size:.8rem;color:var(--muted)}
+  .grow{flex:1}
+
+  /* Auto-route toggle */
+  .route{display:flex;align-items:center;gap:10px;padding:7px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+  .route .lbl{font-size:.8rem;font-weight:600}
+  .route .hint{font-size:.7rem;color:var(--muted)}
+  .switch{position:relative;width:40px;height:22px;flex-shrink:0;cursor:pointer}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;border-radius:999px;background:var(--panel2);border:1px solid var(--border);transition:.18s}
+  .slider:before{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;border-radius:50%;background:var(--muted);transition:.18s}
+  .switch input:checked + .slider{background:var(--accent-soft);border-color:var(--accent)}
+  .switch input:checked + .slider:before{transform:translateX(18px);background:var(--accent)}
+  .modelchip{font-size:.76rem;color:var(--muted);padding:6px 11px;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
+  .modelchip b{color:var(--text);font-weight:600}
+
+  /* ── Thread ──────────────────────────────────────────────── */
+  .thread{flex:1;overflow-y:auto;padding:26px 0}
+  .thread-inner{max-width:820px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;gap:18px}
+  .msg{display:flex;flex-direction:column;gap:6px;max-width:92%}
+  .msg.user{align-self:flex-end;align-items:flex-end}
+  .msg.ai{align-self:flex-start}
+  .bubble{padding:12px 16px;border-radius:var(--radius);white-space:pre-wrap;word-wrap:break-word;font-size:.93rem}
+  .msg.user .bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+  .msg.ai .bubble{background:var(--panel);border:1px solid var(--border);border-bottom-left-radius:4px}
+  .msg.ai.error .bubble{border-color:rgba(224,93,93,.5);color:var(--bad)}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.7rem;color:var(--muted);padding:0 4px}
+  .meta .tag{padding:2px 8px;border:1px solid var(--border);border-radius:999px;background:var(--panel)}
+  .meta .tag.route-fast{color:var(--ok);border-color:rgba(63,185,111,.35)}
+  .meta .tag.route-quality{color:var(--accent);border-color:rgba(79,142,247,.35)}
+  .sources{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+  .source{font-size:.78rem;color:var(--muted);border-left:3px solid var(--accent);padding:5px 10px;background:var(--panel);border-radius:0 8px 8px 0}
+  .source b{color:var(--text)}
+  .empty{margin:auto;text-align:center;color:var(--muted);max-width:440px}
+  .empty .logo{width:52px;height:52px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
+  .empty h2{color:var(--text);font-size:1.15rem;margin:0 0 8px}
+  .empty p{font-size:.88rem;margin:0}
+  .suggests{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
+  .suggests button{border:1px solid var(--border);background:var(--panel);color:var(--muted);border-radius:999px;padding:7px 14px;font:inherit;font-size:.8rem;cursor:pointer}
+  .suggests button:hover{color:var(--text);border-color:var(--accent)}
+
+  /* ── Composer ────────────────────────────────────────────── */
+  .composer{border-top:1px solid var(--border);padding:16px 24px 20px}
+  .composer-inner{max-width:820px;margin:0 auto;display:flex;gap:10px;align-items:flex-end;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:10px 10px 10px 16px}
+  .composer-inner:focus-within{border-color:var(--accent)}
+  textarea{flex:1;background:transparent;border:0;color:var(--text);font:inherit;font-size:.93rem;resize:none;outline:none;max-height:180px;line-height:1.45}
+  .send{width:38px;height:38px;flex-shrink:0;border:0;border-radius:11px;background:var(--accent);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .send:disabled{opacity:.45;cursor:default}
+  .composer .hint{max-width:820px;margin:8px auto 0;font-size:.72rem;color:var(--muted);text-align:center}
+
+  /* ── Tools panel ─────────────────────────────────────────── */
+  .toolform{max-width:820px;margin:0 auto;padding:0 24px 10px;display:none}
+  .toolform.on{display:block}
+  .toolform .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px}
+  .toolform label{display:block;font-size:.78rem;color:var(--muted);margin:10px 0 4px}
+  .toolform input,.toolform textarea{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 11px;font:inherit;font-size:.88rem;outline:none;resize:vertical}
+  .toolform textarea{min-height:100px}
+  .toolform .runbtn{margin-top:14px;border:0;border-radius:10px;background:var(--accent);color:#fff;padding:9px 18px;font:inherit;font-size:.86rem;font-weight:600;cursor:pointer}
+  .toolform .runbtn:disabled{opacity:.5}
+  .tooldesc{font-size:.82rem;color:var(--muted);margin:4px 0 0}
+
+  @media(max-width:760px){
+    aside{position:fixed;z-index:20;height:100%;transform:translateX(-100%);transition:.2s}
+    aside.open{transform:none}
+    .menu-btn{display:block}
+  }
+  .menu-btn{display:none;background:none;border:0;color:var(--text);font-size:20px;cursor:pointer}
+  @media(min-width:761px){.menu-btn{display:none}}
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="brand"><span class="logo">🔒</span> Local AI Workspace</div>
+  <nav>
+    <button class="navbtn on" id="nav-chat" onclick="setMode('chat')">💬&nbsp; Chat</button>
+    <button class="navbtn" id="nav-docs" onclick="setMode('docs')">📄&nbsp; Ask Documents</button>
+    <button class="navbtn" id="nav-tools" onclick="setMode('tools')">🧰&nbsp; Tools</button>
+  </nav>
+  <div class="sidebox" id="kbBox" style="display:none">
+    <h4>Knowledge base</h4>
+    <select id="kbSelect"></select>
+    <div class="kbcount" id="kbCount"></div>
+  </div>
+  <div class="sidebox" id="toolBox" style="display:none">
+    <h4>Tool</h4>
+    <select id="toolSelect" onchange="renderToolForm()"></select>
+    <div class="kbcount" id="toolDesc"></div>
+  </div>
+  <div class="side-spacer"></div>
+  <div class="sidefoot">
+    <span class="pill local" id="privacyPill">local-only</span>
+    <br><a href="/ops">⚙︎ Operations dashboard</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header>
+    <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div>
+      <h1 id="modeTitle">Chat</h1>
+      <div class="sub" id="modeSub">Talk to your private model — nothing leaves this machine.</div>
+    </div>
+    <div class="grow"></div>
+    <div class="route" title="On: each request is routed to the smallest model that fits the task — saving tokens and time. Off: always use your selected model.">
+      <div>
+        <div class="lbl">Auto model</div>
+        <div class="hint">best fit per task · saves tokens</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="routeToggle" onchange="toggleRouting(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="modelchip" id="modelChip">…</div>
+  </header>
+
+  <div class="thread" id="thread">
+    <div class="empty" id="emptyState">
+      <div class="logo">🔒</div>
+      <h2>Your private AI, ready.</h2>
+      <p>Everything runs locally. Ask anything, query your documents, or run a business tool.</p>
+      <div class="suggests" id="suggests"></div>
+    </div>
+    <div class="thread-inner" id="threadInner"></div>
+  </div>
+
+  <div class="toolform" id="toolForm"></div>
+
+  <div class="composer" id="composer">
+    <div class="composer-inner">
+      <textarea id="input" rows="1" placeholder="Ask your private AI…"
+        oninput="autosize(this)" onkeydown="onKey(event)"></textarea>
+      <button class="send" id="sendBtn" onclick="send()" title="Send">➤</button>
+    </div>
+    <div class="hint" id="composerHint">Enter to send · Shift+Enter for a new line · Private by default</div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ── auth (shared behavior with /ops) ── */
+let apiKey = localStorage.getItem('lap_api_key') || '';
+const authHeaders = () => apiKey ? {'Authorization':'Bearer '+apiKey} : {};
+function promptForKey(){
+  const k = prompt('This server requires an API key (LAP_API_KEY):');
+  if(k === null) return false;
+  apiKey = k.trim(); localStorage.setItem('lap_api_key', apiKey); return true;
+}
+async function api(path, opts={}, retried=false){
+  const r = await fetch(path, {...opts, headers:{'Content-Type':'application/json',...authHeaders(),...(opts.headers||{})}});
+  if(r.status === 401 && !retried && promptForKey()) return api(path, opts, true);
+  const data = await r.json().catch(()=>({detail:'invalid response'}));
+  if(!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+
+/* ── state ── */
+let mode = 'chat';
+let status = null;
+let tools = [];
+
+const MODES = {
+  chat:  {title:'Chat', sub:'Talk to your private model — nothing leaves this machine.',
+          placeholder:'Ask your private AI…',
+          suggests:['Draft a follow-up email to a cold lead','Explain our onboarding process improvements','Summarize: paste any text here']},
+  docs:  {title:'Ask Documents', sub:'Answers grounded in your private knowledge base, with sources.',
+          placeholder:'Ask a question about your documents…',
+          suggests:['What are the payment terms in our contracts?','Summarize our Q3 pipeline report','What does our policy say about remote work?']},
+  tools: {title:'Tools', sub:'Run business tools powered by your local models.',
+          placeholder:'', suggests:[]},
+};
+
+function setMode(m){
+  mode = m;
+  for(const k of Object.keys(MODES)) $('nav-'+(k==='chat'?'chat':k==='docs'?'docs':'tools')).classList.toggle('on', k===m);
+  $('modeTitle').textContent = MODES[m].title;
+  $('modeSub').textContent = MODES[m].sub;
+  $('kbBox').style.display = m==='docs' ? '' : 'none';
+  $('toolBox').style.display = m==='tools' ? '' : 'none';
+  $('composer').style.display = m==='tools' ? 'none' : '';
+  $('toolForm').classList.toggle('on', m==='tools');
+  $('input').placeholder = MODES[m].placeholder;
+  renderSuggests();
+  if(m==='tools') renderToolForm();
+  $('sidebar').classList.remove('open');
+}
+
+function renderSuggests(){
+  $('suggests').innerHTML = MODES[mode].suggests.map(s=>
+    `<button onclick="useSuggest(this)">${esc(s)}</button>`).join('');
+}
+function useSuggest(btn){ $('input').value = btn.textContent; $('input').focus(); autosize($('input')); }
+
+/* ── thread rendering ── */
+function hideEmpty(){ $('emptyState').style.display = 'none'; }
+function addUserMsg(text){
+  hideEmpty();
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = `<div class="bubble">${esc(text)}</div>`;
+  $('threadInner').appendChild(div);
+  scrollDown();
+}
+function addAiMsg({text, model, routing, latency, sources, error}){
+  hideEmpty();
+  const div = document.createElement('div');
+  div.className = 'msg ai' + (error ? ' error' : '');
+  let html = `<div class="bubble">${esc(text)}</div>`;
+  if(sources && sources.length){
+    html += '<div class="sources">' + sources.map(s=>
+      `<div class="source"><b>[${s.ref}]</b> ${esc(s.filename)} · section ${s.chunk_seq+1} · relevance ${s.score}</div>`).join('') + '</div>';
+  }
+  if(!error){
+    const tier = routing && routing.startsWith('fast') ? 'route-fast' : routing && routing.startsWith('quality') ? 'route-quality' : '';
+    html += `<div class="meta">`
+      + (model ? `<span class="tag">${esc(model)}</span>` : '')
+      + (routing ? `<span class="tag ${tier}">${esc(routing)}</span>` : '')
+      + (latency != null ? `<span class="tag">${latency} ms</span>` : '')
+      + `</div>`;
+  }
+  div.innerHTML = html;
+  $('threadInner').appendChild(div);
+  scrollDown();
+  return div;
+}
+function addThinking(){
+  hideEmpty();
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = '<div class="bubble" style="color:var(--muted)">Thinking locally…</div>';
+  $('threadInner').appendChild(div);
+  scrollDown();
+  return div;
+}
+function scrollDown(){ const t = $('thread'); t.scrollTop = t.scrollHeight; }
+
+/* ── composer ── */
+function autosize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,180)+'px'; }
+function onKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); } }
+
+async function send(){
+  const text = $('input').value.trim();
+  if(!text) return;
+  $('input').value=''; autosize($('input'));
+  $('sendBtn').disabled = true;
+  addUserMsg(text);
+  const thinking = addThinking();
+  try{
+    let msg;
+    if(mode === 'docs'){
+      const kb = $('kbSelect').value || 'default';
+      const r = await api('/v1/rag/query',{method:'POST',body:JSON.stringify({question:text, kb})});
+      msg = {text:r.answer, model:r.model, routing:r.routing, latency:r.latency_ms, sources:r.sources};
+    }else{
+      const r = await api('/v1/chat',{method:'POST',body:JSON.stringify({messages:[{role:'user',content:text}]})});
+      msg = {text:r.output, model:r.model, routing:r.routing, latency:r.latency_ms};
+    }
+    thinking.remove();
+    addAiMsg(msg);
+  }catch(e){
+    thinking.remove();
+    addAiMsg({text:e.message, error:true});
+  }
+  $('sendBtn').disabled = false;
+  $('input').focus();
+}
+
+/* ── tools ── */
+function renderToolForm(){
+  if(!tools.length){ $('toolForm').innerHTML='<div class="card">No tools available.</div>'; return; }
+  const t = tools.find(x=>x.name===$('toolSelect').value) || tools[0];
+  $('toolDesc').textContent = t.description;
+  const fields = Object.entries(t.inputs).map(([name,desc])=>{
+    const req = t.required.includes(name) ? ' *' : '';
+    const big = /content|data|text|input/.test(name);
+    return `<label>${esc(name)}${req} — ${esc(desc)}</label>` +
+      (big ? `<textarea id="tin_${name}"></textarea>` : `<input id="tin_${name}">`);
+  }).join('');
+  $('toolForm').innerHTML = `<div class="card">
+    <b>${esc(t.title)}</b>
+    <p class="tooldesc">${esc(t.description)}</p>
+    ${fields}
+    <button class="runbtn" id="toolRun" onclick="runTool('${esc(t.name)}')">Run locally</button>
+  </div>`;
+}
+async function runTool(name){
+  const t = tools.find(x=>x.name===name);
+  const inputs = {};
+  for(const f of Object.keys(t.inputs)){
+    const v = $('tin_'+f).value;
+    if(v.trim()) inputs[f]=v;
+  }
+  $('toolRun').disabled = true;
+  addUserMsg(`▶ ${t.title}`);
+  const thinking = addThinking();
+  try{
+    const r = await api(`/v1/tools/${name}/run`,{method:'POST',body:JSON.stringify({inputs})});
+    thinking.remove();
+    addAiMsg({text:r.output, model:r.model, routing:r.routing, latency:r.latency_ms, sources:r.sources});
+  }catch(e){
+    thinking.remove();
+    addAiMsg({text:e.message, error:true});
+  }
+  $('toolRun').disabled = false;
+}
+
+/* ── status / routing / bootstrap ── */
+async function toggleRouting(on){
+  try{
+    await api('/v1/routing',{method:'POST',body:JSON.stringify({auto:on})});
+    await refreshStatus();
+  }catch(e){ alert(e.message); $('routeToggle').checked = !on; }
+}
+
+async function refreshStatus(){
+  try{
+    status = await api('/v1/status');
+    const local = status.privacy.mode === 'local-only';
+    const pill = $('privacyPill');
+    pill.textContent = status.privacy.mode;
+    pill.className = 'pill ' + (local?'local':'cloud');
+    $('routeToggle').checked = !!(status.routing && status.routing.auto);
+    if(status.routing && status.routing.auto){
+      $('modelChip').innerHTML = `auto · <b>${esc(status.routing.fast_model)}</b> / <b>${esc(status.routing.quality_model)}</b>`;
+    }else{
+      $('modelChip').innerHTML = `model · <b>${esc(status.active_model)}</b>`;
+    }
+  }catch(e){ $('modelChip').textContent = 'server unreachable'; }
+}
+
+async function loadKbs(){
+  try{
+    const d = await api('/v1/knowledge-bases');
+    const kbs = d.knowledge_bases;
+    const sel = $('kbSelect');
+    sel.innerHTML = kbs.length
+      ? kbs.map(k=>`<option value="${esc(k.name)}">${esc(k.name)}</option>`).join('')
+      : '<option value="default">default</option>';
+    const cur = kbs.find(k=>k.name===sel.value);
+    $('kbCount').textContent = cur ? `${cur.documents} docs · ${cur.chunks} chunks` : 'No documents yet — upload in Operations.';
+  }catch(e){}
+}
+
+async function loadTools(){
+  try{
+    const d = await api('/v1/tools');
+    tools = d.tools;
+    $('toolSelect').innerHTML = tools.map(t=>`<option value="${esc(t.name)}">${esc(t.title)}</option>`).join('');
+  }catch(e){}
+}
+
+refreshStatus(); loadKbs(); loadTools(); renderSuggests();
+setInterval(refreshStatus, 20000);
+</script>
+</body>
+</html>

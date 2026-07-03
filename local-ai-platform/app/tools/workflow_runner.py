@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
-from ..providers import ChatMessage, active_model, get_provider
+from ..providers import ChatMessage, get_provider, resolve_model
 from .base import Tool, ToolSpec
 
 SYSTEM = """You are a reliable business operations assistant executing one step of a workflow. Follow the step instruction exactly. Work only from the provided input data and prior step output. Do not invent facts. Keep output clean and directly usable."""
@@ -52,7 +52,9 @@ class WorkflowRunnerTool(Tool):
         self.validate(inputs)
         steps = self._resolve_steps(inputs)
         provider = get_provider()
-        model = model or active_model()
+        model, routing = resolve_model("tool:workflow_runner",
+                                       input_chars=len(str(inputs["input_data"])),
+                                       explicit=model)
 
         previous_output = ""
         step_results: list[dict[str, Any]] = []
@@ -77,6 +79,7 @@ class WorkflowRunnerTool(Tool):
             "steps": step_results,
             "model": model,
             "provider": provider.name,
+            "routing": routing,
             "latency_ms": total_latency,
         }
 
