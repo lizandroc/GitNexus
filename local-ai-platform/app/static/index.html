@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local AI Platform</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b23; --panel2:#1d242f; --border:#2a3342;
+    --text:#e6ebf2; --muted:#8b96a8; --accent:#4f8ef7; --ok:#3fb96f; --bad:#e05d5d; --warn:#d9a13b;
+    font-size:15px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:5}
+  header h1{font-size:1.1rem;margin:0;font-weight:650}
+  .badge{padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid var(--border)}
+  .badge.local{background:rgba(63,185,111,.12);color:var(--ok);border-color:rgba(63,185,111,.4)}
+  .badge.cloud{background:rgba(217,161,59,.12);color:var(--warn);border-color:rgba(217,161,59,.4)}
+  .spacer{flex:1}
+  main{max-width:1180px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  section{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+  section.wide{grid-column:1/-1}
+  h2{font-size:.95rem;margin:0 0 12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  th{color:var(--muted);text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--border)}
+  td{padding:6px 8px;border-bottom:1px solid rgba(42,51,66,.5);vertical-align:top}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+  .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+  button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:7px 13px;font-size:.85rem;font-weight:600;cursor:pointer}
+  button.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+  button:disabled{opacity:.5;cursor:default}
+  input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:.88rem;font-family:inherit}
+  textarea{min-height:90px;resize:vertical}
+  label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 4px}
+  .row{display:flex;gap:10px;align-items:center}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px}
+  .stat{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+  .stat .v{font-size:1.25rem;font-weight:700}
+  .stat .l{font-size:.75rem;color:var(--muted)}
+  .out{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:10px;white-space:pre-wrap;font-size:.87rem;max-height:340px;overflow:auto}
+  .src{font-size:.8rem;color:var(--muted);border-left:3px solid var(--accent);padding:4px 10px;margin-top:8px}
+  .muted{color:var(--muted)} .small{font-size:.8rem}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tabs button{background:var(--panel2);color:var(--muted);border:1px solid var(--border)}
+  .tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .hidden{display:none}
+  @media (max-width:900px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔒 Local AI Platform</h1>
+  <span id="privacyBadge" class="badge local">local-only</span>
+  <span id="serverBadge" class="badge">server: …</span>
+  <div class="spacer"></div>
+  <span class="small muted" id="activeInfo"></span>
+  <a href="/" class="badge" style="text-decoration:none;color:var(--text)">💬 Workspace</a>
+  <button class="ghost" onclick="refreshAll()">Refresh</button>
+</header>
+<main>
+
+<section class="wide">
+  <h2>Overview</h2>
+  <div class="stats">
+    <div class="stat"><div class="v" id="stDocs">–</div><div class="l">Documents</div></div>
+    <div class="stat"><div class="v" id="stChunks">–</div><div class="l">Indexed chunks</div></div>
+    <div class="stat"><div class="v" id="stRuns">–</div><div class="l">AI runs</div></div>
+    <div class="stat"><div class="v" id="stLatency">–</div><div class="l">Avg latency (ms)</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Models</h2>
+  <div id="modelsArea" class="small muted">Loading…</div>
+</section>
+
+<section>
+  <h2>Documents & Knowledge Bases</h2>
+  <div class="row">
+    <input type="file" id="fileInput">
+    <input type="text" id="kbInput" placeholder="knowledge base (default)" style="max-width:180px">
+    <button onclick="uploadDoc()" id="uploadBtn">Upload</button>
+  </div>
+  <div id="docsArea" class="small" style="margin-top:12px">Loading…</div>
+</section>
+
+<section class="wide">
+  <h2>Ask Your Documents (RAG)</h2>
+  <div class="row">
+    <input type="text" id="ragQuestion" placeholder="Ask a question about your private documents…">
+    <input type="text" id="ragKb" placeholder="kb: default" style="max-width:140px">
+    <button onclick="askRag()" id="ragBtn">Ask</button>
+  </div>
+  <div id="ragOut"></div>
+</section>
+
+<section class="wide">
+  <h2>Tools</h2>
+  <div class="tabs" id="toolTabs"></div>
+  <div id="toolForms"></div>
+</section>
+
+<section class="wide">
+  <h2>Recent AI Runs</h2>
+  <div id="runsArea" class="small">Loading…</div>
+</section>
+
+</main>
+<script>
+const $ = id => document.getElementById(id);
+// If the server was started with LAP_API_KEY, every /v1 call needs a bearer
+// token. The dashboard asks for it on the first 401 and keeps it locally.
+let apiKey = localStorage.getItem('lap_api_key') || '';
+const authHeaders = () => apiKey ? {'Authorization': 'Bearer ' + apiKey} : {};
+function promptForKey(){
+  const entered = prompt('This server requires an API key (LAP_API_KEY). Enter it to use the dashboard:');
+  if(entered === null) return false;
+  apiKey = entered.trim();
+  localStorage.setItem('lap_api_key', apiKey);
+  return true;
+}
+const api = async (path, opts={}, retried=false) => {
+  const r = await fetch(path, {...opts, headers:{'Content-Type':'application/json',...authHeaders(),...(opts.headers||{})}});
+  if(r.status === 401 && !retried && promptForKey()) return api(path, opts, true);
+  const data = await r.json().catch(()=>({detail:'invalid response'}));
+  if(!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+};
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtBytes = b => b==null ? '' : b > 1e9 ? (b/1e9).toFixed(1)+' GB' : b > 1e6 ? (b/1e6).toFixed(1)+' MB' : Math.round(b/1e3)+' KB';
+
+async function refreshStatus(){
+  try{
+    const s = await api('/v1/status');
+    $('serverBadge').textContent = 'server: ok';
+    const local = s.privacy.mode === 'local-only';
+    const pb = $('privacyBadge');
+    pb.textContent = s.privacy.mode; pb.className = 'badge ' + (local ? 'local' : 'cloud');
+    $('activeInfo').textContent = `${s.active_provider} · ${s.active_model}`;
+    $('stDocs').textContent = s.documents;
+    $('stChunks').textContent = s.indexed_chunks;
+    $('stRuns').textContent = s.usage.total_runs;
+    $('stLatency').textContent = s.usage.avg_latency_ms ?? '–';
+  }catch(e){ $('serverBadge').textContent = 'server: unreachable'; }
+}
+
+async function refreshModels(){
+  try{
+    const m = await api('/v1/models');
+    let html = '';
+    for(const [prov, info] of Object.entries(m.providers)){
+      if(prov === 'mock' && m.active_provider !== 'mock') continue;
+      html += `<div style="margin-bottom:10px"><span class="dot ${info.healthy?'ok':'bad'}"></span><b>${esc(prov)}</b> <span class="muted">${info.healthy?'running':'not detected'}</span></div>`;
+      if(info.models && info.models.length){
+        html += '<table><tr><th>Model</th><th>Size</th><th></th></tr>';
+        for(const mod of info.models){
+          const active = prov===m.active_provider && mod.name===m.active_model;
+          html += `<tr><td>${esc(mod.name)} ${active?'<span class="badge local">active</span>':''} <span class="muted">${esc(mod.parameter_size||'')}</span></td>
+            <td class="muted">${fmtBytes(mod.size_bytes)}</td>
+            <td style="white-space:nowrap">${active?'':`<button class="ghost" onclick="selectModel('${prov}','${esc(mod.name)}')">Use</button>`}
+            <button class="ghost" onclick="benchModel('${prov}','${esc(mod.name)}',this)">Speed</button></td></tr>`;
+        }
+        html += '</table>';
+      }
+    }
+    $('modelsArea').innerHTML = html || '<span class="muted">No local runtime detected. Start Ollama or LM Studio.</span>';
+  }catch(e){ $('modelsArea').textContent = 'Error: ' + e.message; }
+}
+
+async function selectModel(provider, model){
+  await api('/v1/models/select',{method:'POST',body:JSON.stringify({provider,model})}).catch(e=>alert(e.message));
+  refreshStatus(); refreshModels();
+}
+async function benchModel(provider, model, btn){
+  btn.disabled = true; btn.textContent = '…';
+  try{
+    const r = await api('/v1/models/benchmark',{method:'POST',body:JSON.stringify({provider,model})});
+    btn.textContent = r.tokens_per_second ? `${r.tokens_per_second} tok/s` : `${r.latency_ms} ms`;
+  }catch(e){ btn.textContent = 'Speed'; alert(e.message); }
+  btn.disabled = false;
+}
+
+async function refreshDocs(){
+  try{
+    const d = await api('/v1/documents');
+    if(!d.documents.length){ $('docsArea').innerHTML = '<span class="muted">No documents yet. Upload .txt, .md, .pdf, .csv, .eml…</span>'; return; }
+    let html = '<table><tr><th>File</th><th>KB</th><th>Chunks</th><th>Status</th><th></th></tr>';
+    for(const doc of d.documents){
+      html += `<tr><td>${esc(doc.filename)}</td><td>${esc(doc.kb)}</td><td>${doc.num_chunks}</td>
+        <td>${doc.status==='ready'?'<span class="dot ok"></span>ready':`<span class="dot bad"></span>${esc(doc.status)}`}</td>
+        <td><button class="ghost" onclick="delDoc('${doc.id}')">Delete</button></td></tr>`;
+    }
+    $('docsArea').innerHTML = html + '</table>';
+  }catch(e){ $('docsArea').textContent = 'Error: ' + e.message; }
+}
+async function uploadDoc(){
+  const f = $('fileInput').files[0];
+  if(!f){ alert('Choose a file first'); return; }
+  $('uploadBtn').disabled = true; $('uploadBtn').textContent = 'Indexing…';
+  const fd = new FormData();
+  fd.append('file', f); fd.append('kb', $('kbInput').value || 'default');
+  try{
+    let r = await fetch('/v1/documents',{method:'POST',body:fd,headers:authHeaders()});
+    if(r.status === 401 && promptForKey())
+      r = await fetch('/v1/documents',{method:'POST',body:fd,headers:authHeaders()});
+    if(!r.ok){ const d = await r.json(); throw new Error(d.detail); }
+  }catch(e){ alert(e.message); }
+  $('uploadBtn').disabled = false; $('uploadBtn').textContent = 'Upload';
+  $('fileInput').value = '';
+  refreshDocs(); refreshStatus();
+}
+async function delDoc(id){
+  if(!confirm('Delete this document and its index?')) return;
+  await api('/v1/documents/'+id,{method:'DELETE'}).catch(e=>alert(e.message));
+  refreshDocs(); refreshStatus();
+}
+
+async function askRag(){
+  const q = $('ragQuestion').value.trim();
+  if(!q) return;
+  $('ragBtn').disabled = true;
+  $('ragOut').innerHTML = '<div class="out muted">Thinking locally…</div>';
+  try{
+    const r = await api('/v1/rag/query',{method:'POST',body:JSON.stringify({question:q, kb: $('ragKb').value.trim()||'default'})});
+    let html = `<div class="out">${esc(r.answer)}</div>`;
+    for(const s of r.sources) html += `<div class="src">[${s.ref}] ${esc(s.filename)} · section ${s.chunk_seq+1} · score ${s.score}</div>`;
+    $('ragOut').innerHTML = html;
+  }catch(e){ $('ragOut').innerHTML = `<div class="out" style="color:var(--bad)">${esc(e.message)}</div>`; }
+  $('ragBtn').disabled = false;
+  refreshStatus(); refreshRuns();
+}
+
+let toolSpecs = [];
+async function loadTools(){
+  const t = await api('/v1/tools').catch(()=>({tools:[]}));
+  toolSpecs = t.tools;
+  $('toolTabs').innerHTML = toolSpecs.map((s,i)=>`<button id="tab${i}" onclick="showTool(${i})">${esc(s.title)}</button>`).join('');
+  $('toolForms').innerHTML = toolSpecs.map((s,i)=>{
+    let fields = Object.entries(s.inputs).map(([name,desc])=>{
+      const req = s.required.includes(name) ? ' *' : '';
+      const big = /content|data|text/.test(name);
+      return `<label>${esc(name)}${req} — <span class="muted">${esc(desc)}</span></label>` +
+        (big ? `<textarea id="tf${i}_${name}"></textarea>` : `<input id="tf${i}_${name}">`);
+    }).join('');
+    return `<div id="toolForm${i}" class="hidden"><p class="small muted">${esc(s.description)}</p>${fields}
+      <div style="margin-top:12px"><button onclick="runTool(${i})" id="toolBtn${i}">Run locally</button></div>
+      <div id="toolOut${i}"></div></div>`;
+  }).join('');
+  if(toolSpecs.length) showTool(0);
+}
+function showTool(i){
+  toolSpecs.forEach((_,j)=>{
+    $('toolForm'+j).classList.toggle('hidden', j!==i);
+    $('tab'+j).classList.toggle('on', j===i);
+  });
+}
+async function runTool(i){
+  const s = toolSpecs[i];
+  const inputs = {};
+  for(const name of Object.keys(s.inputs)){
+    const v = $(`tf${i}_${name}`).value;
+    if(v.trim()) inputs[name] = v;
+  }
+  $('toolBtn'+i).disabled = true;
+  $('toolOut'+i).innerHTML = '<div class="out muted">Running locally…</div>';
+  try{
+    const r = await api(`/v1/tools/${s.name}/run`,{method:'POST',body:JSON.stringify({inputs})});
+    let html = `<div class="out">${esc(r.output)}</div>`;
+    if(r.sources) for(const src of r.sources) html += `<div class="src">[${src.ref}] ${esc(src.filename)} · score ${src.score}</div>`;
+    html += `<div class="small muted" style="margin-top:6px">${esc(r.provider)} · ${esc(r.model)} · ${r.latency_ms} ms</div>`;
+    $('toolOut'+i).innerHTML = html;
+  }catch(e){ $('toolOut'+i).innerHTML = `<div class="out" style="color:var(--bad)">${esc(e.message)}</div>`; }
+  $('toolBtn'+i).disabled = false;
+  refreshStatus(); refreshRuns();
+}
+
+async function refreshRuns(){
+  try{
+    const r = await api('/v1/runs?limit=15');
+    if(!r.runs.length){ $('runsArea').innerHTML = '<span class="muted">No runs yet.</span>'; return; }
+    let html = '<table><tr><th>When</th><th>Kind</th><th>Tool</th><th>Model</th><th>Status</th><th>Latency</th></tr>';
+    for(const run of r.runs){
+      html += `<tr><td class="muted">${new Date(run.created_at*1000).toLocaleTimeString()}</td>
+        <td>${esc(run.kind)}</td><td>${esc(run.tool||'')}</td><td class="muted">${esc(run.model||'')}</td>
+        <td>${run.status==='ok'?'<span class="dot ok"></span>ok':`<span class="dot bad"></span>error`}</td>
+        <td class="muted">${run.latency_ms??''} ms</td></tr>`;
+    }
+    $('runsArea').innerHTML = html + '</table>';
+  }catch(e){ $('runsArea').textContent = 'Error: ' + e.message; }
+}
+
+function refreshAll(){ refreshStatus(); refreshModels(); refreshDocs(); refreshRuns(); }
+refreshAll(); loadTools();
+setInterval(refreshStatus, 15000);
+</script>
+</body>
+</html>
