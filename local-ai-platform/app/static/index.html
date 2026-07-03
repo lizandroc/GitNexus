@@ -108,8 +108,20 @@
 </main>
 <script>
 const $ = id => document.getElementById(id);
-const api = async (path, opts={}) => {
-  const r = await fetch(path, {headers:{'Content-Type':'application/json'},...opts});
+// If the server was started with LAP_API_KEY, every /v1 call needs a bearer
+// token. The dashboard asks for it on the first 401 and keeps it locally.
+let apiKey = localStorage.getItem('lap_api_key') || '';
+const authHeaders = () => apiKey ? {'Authorization': 'Bearer ' + apiKey} : {};
+function promptForKey(){
+  const entered = prompt('This server requires an API key (LAP_API_KEY). Enter it to use the dashboard:');
+  if(entered === null) return false;
+  apiKey = entered.trim();
+  localStorage.setItem('lap_api_key', apiKey);
+  return true;
+}
+const api = async (path, opts={}, retried=false) => {
+  const r = await fetch(path, {...opts, headers:{'Content-Type':'application/json',...authHeaders(),...(opts.headers||{})}});
+  if(r.status === 401 && !retried && promptForKey()) return api(path, opts, true);
   const data = await r.json().catch(()=>({detail:'invalid response'}));
   if(!r.ok) throw new Error(data.detail || r.statusText);
   return data;
@@ -188,7 +200,9 @@ async function uploadDoc(){
   const fd = new FormData();
   fd.append('file', f); fd.append('kb', $('kbInput').value || 'default');
   try{
-    const r = await fetch('/v1/documents',{method:'POST',body:fd});
+    let r = await fetch('/v1/documents',{method:'POST',body:fd,headers:authHeaders()});
+    if(r.status === 401 && promptForKey())
+      r = await fetch('/v1/documents',{method:'POST',body:fd,headers:authHeaders()});
     if(!r.ok){ const d = await r.json(); throw new Error(d.detail); }
   }catch(e){ alert(e.message); }
   $('uploadBtn').disabled = false; $('uploadBtn').textContent = 'Upload';
