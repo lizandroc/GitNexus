@@ -1,0 +1,27 @@
+{
+  "name": "quillcheck",
+  "productName": "QuillCheck",
+  "version": "1.0.0",
+  "description": "A Grammarly-style writing assistant for macOS",
+  "author": "GitNexus",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/engine.test.js",
+    "dist": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.gitnexus.quillcheck",
+    "productName": "QuillCheck",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"]
+    },
+    "files": ["main.js", "preload.js", "renderer/**/*"]
+  }
+}
