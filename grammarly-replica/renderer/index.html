@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'" />
+  <title>QuillCheck</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="titlebar">
+    <div class="brand">
+      <span class="brand-mark">Q</span>
+      <span class="brand-name">QuillCheck</span>
+    </div>
+    <div class="tone-chip" id="toneChip">Neutral</div>
+    <div class="score-wrap">
+      <svg class="score-ring" viewBox="0 0 40 40" aria-hidden="true">
+        <circle class="ring-bg" cx="20" cy="20" r="16"></circle>
+        <circle class="ring-fg" id="scoreRing" cx="20" cy="20" r="16"></circle>
+      </svg>
+      <span class="score-num" id="scoreNum">100</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="editor-pane">
+      <div class="editor-stack">
+        <div class="editor-backdrop" id="backdrop" aria-hidden="true"></div>
+        <textarea
+          id="editor"
+          class="editor-input"
+          placeholder="Start writing, or paste your text here…"
+          spellcheck="false"
+          autofocus></textarea>
+      </div>
+      <footer class="statusbar">
+        <span id="statWords">0 words</span>
+        <span id="statChars">0 characters</span>
+        <span id="statSentences">0 sentences</span>
+        <span id="statTime">0 sec read</span>
+        <span id="statReadability" title="Flesch Reading Ease (higher is easier)">Readability —</span>
+      </footer>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Suggestions</h2>
+        <div class="filters" id="filters">
+          <button class="filter active" data-cat="all">All <b id="countAll">0</b></button>
+          <button class="filter cat-correctness" data-cat="correctness">Correctness <b id="countCorrectness">0</b></button>
+          <button class="filter cat-clarity" data-cat="clarity">Clarity <b id="countClarity">0</b></button>
+          <button class="filter cat-engagement" data-cat="engagement">Engagement <b id="countEngagement">0</b></button>
+        </div>
+      </div>
+      <div class="cards" id="cards">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">✓</div>
+          <p>Nothing to fix yet.<br/>Your writing looks good!</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

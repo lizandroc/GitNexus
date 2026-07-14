@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QuillCheck</title>
+  <style>
+:root {
+  --bg: #f6f7f8;
+  --panel: #ffffff;
+  --border: #e4e7ea;
+  --text: #1c2b33;
+  --muted: #6b7a85;
+  --green: #15c39a;
+  --red: #ff4d4d;
+  --blue: #2f80ed;
+  --violet: #9b51e0;
+  --radius: 10px;
+  font-size: 15px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- Title bar (macOS hiddenInset) ---- */
+.titlebar {
+  -webkit-app-region: drag;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+.titlebar button, .score-wrap { -webkit-app-region: no-drag; }
+
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand-mark {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: var(--green); color: #fff;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 15px;
+}
+.brand-name { font-weight: 600; font-size: 15px; }
+
+.tone-chip {
+  margin-left: auto;
+  font-size: 12px; font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: var(--bg);
+}
+
+.score-wrap { position: relative; width: 40px; height: 40px; }
+.score-ring { width: 40px; height: 40px; transform: rotate(-90deg); }
+.ring-bg, .ring-fg {
+  fill: none; stroke-width: 4;
+  stroke-linecap: round;
+}
+.ring-bg { stroke: var(--border); }
+.ring-fg {
+  stroke: var(--green);
+  stroke-dasharray: 100.5; /* 2πr, r=16 */
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset .4s ease, stroke .4s ease;
+}
+.score-num {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+}
+
+/* ---- Layout ---- */
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  min-height: 0;
+}
+
+/* ---- Editor ---- */
+.editor-pane {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  padding: 24px 28px 0;
+}
+.editor-stack {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.editor-backdrop, .editor-input {
+  font: 400 17px/1.7 "SF Pro Text", Georgia, -apple-system, serif;
+  letter-spacing: 0.1px;
+  padding: 28px 32px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.editor-backdrop {
+  position: absolute; inset: 0;
+  overflow: auto;
+  color: transparent;
+  pointer-events: none;
+}
+.editor-input {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  background: transparent;
+  color: var(--text);
+  border: none; outline: none; resize: none;
+  overflow: auto;
+}
+
+mark {
+  color: transparent;
+  background: transparent;
+  border-bottom: 2px solid;
+  padding-bottom: 1px;
+}
+mark.correctness { border-color: var(--red); background: rgba(255, 77, 77, .08); }
+mark.clarity     { border-color: var(--blue); background: rgba(47, 128, 237, .08); }
+mark.engagement  { border-color: var(--green); background: rgba(21, 195, 154, .10); }
+mark.delivery    { border-color: var(--violet); background: rgba(155, 81, 224, .08); }
+mark.active-issue { background: rgba(255, 205, 66, .35); }
+
+/* ---- Status bar ---- */
+.statusbar {
+  display: flex; gap: 22px;
+  padding: 12px 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.sidebar-header {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header h2 { font-size: 15px; margin-bottom: 12px; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filter {
+  font: 600 11.5px/-apple-system -apple-system, sans-serif;
+  font-size: 11.5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.filter b { font-weight: 700; margin-left: 3px; }
+.filter.active { background: var(--text); color: #fff; border-color: var(--text); }
+.filter.cat-correctness.active { background: var(--red); border-color: var(--red); }
+.filter.cat-clarity.active { background: var(--blue); border-color: var(--blue); }
+.filter.cat-engagement.active { background: var(--green); border-color: var(--green); }
+
+.cards {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+.card:hover, .card.selected {
+  border-color: #c9d1d8;
+  box-shadow: 0 4px 14px rgba(28, 43, 51, .08);
+}
+.card-top {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 6px;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot.correctness { background: var(--red); }
+.dot.clarity { background: var(--blue); }
+.dot.engagement { background: var(--green); }
+.dot.delivery { background: var(--violet); }
+.card-cat {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4px;
+  color: var(--muted);
+}
+.card-excerpt {
+  font-size: 13.5px;
+  margin-bottom: 4px;
+}
+.card-excerpt s { color: var(--red); text-decoration-thickness: 1.5px; }
+.card-excerpt .fix { color: var(--green); font-weight: 600; }
+.card-msg { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+.card-actions { display: flex; gap: 8px; }
+.btn {
+  font-size: 12.5px; font-weight: 600;
+  border-radius: 7px;
+  padding: 6px 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.btn-apply { background: var(--green); color: #fff; }
+.btn-apply:hover { filter: brightness(.95); }
+.btn-dismiss { background: transparent; color: var(--muted); border-color: var(--border); }
+.btn-dismiss:hover { color: var(--text); }
+
+.empty-state {
+  margin: auto;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.empty-icon {
+  width: 46px; height: 46px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: rgba(21, 195, 154, .12);
+  color: var(--green);
+  display: grid; place-items: center;
+  font-size: 20px; font-weight: 700;
+}
+
+</style>
+</head>
+<body>
+  <header class="titlebar">
+    <div class="brand">
+      <span class="brand-mark">Q</span>
+      <span class="brand-name">QuillCheck</span>
+    </div>
+    <div class="tone-chip" id="toneChip">Neutral</div>
+    <div class="score-wrap">
+      <svg class="score-ring" viewBox="0 0 40 40" aria-hidden="true">
+        <circle class="ring-bg" cx="20" cy="20" r="16"></circle>
+        <circle class="ring-fg" id="scoreRing" cx="20" cy="20" r="16"></circle>
+      </svg>
+      <span class="score-num" id="scoreNum">100</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="editor-pane">
+      <div class="editor-stack">
+        <div class="editor-backdrop" id="backdrop" aria-hidden="true"></div>
+        <textarea
+          id="editor"
+          class="editor-input"
+          placeholder="Start writing, or paste your text here…"
+          spellcheck="false"
+          autofocus></textarea>
+      </div>
+      <footer class="statusbar">
+        <span id="statWords">0 words</span>
+        <span id="statChars">0 characters</span>
+        <span id="statSentences">0 sentences</span>
+        <span id="statTime">0 sec read</span>
+        <span id="statReadability" title="Flesch Reading Ease (higher is easier)">Readability —</span>
+      </footer>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Suggestions</h2>
+        <div class="filters" id="filters">
+          <button class="filter active" data-cat="all">All <b id="countAll">0</b></button>
+          <button class="filter cat-correctness" data-cat="correctness">Correctness <b id="countCorrectness">0</b></button>
+          <button class="filter cat-clarity" data-cat="clarity">Clarity <b id="countClarity">0</b></button>
+          <button class="filter cat-engagement" data-cat="engagement">Engagement <b id="countEngagement">0</b></button>
+        </div>
+      </div>
+      <div class="cards" id="cards">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">✓</div>
+          <p>Nothing to fix yet.<br/>Your writing looks good!</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+/*
+ * QuillCheck engine — rule-based writing analysis.
+ * Runs in the renderer (browser) and in Node for tests, so it has no
+ * DOM or Electron dependencies.
+ *
+ * checkText(text) -> { issues: Issue[], stats: Stats }
+ * Issue: { start, end, category, rule, message, suggestions: string[] }
+ * Categories mirror Grammarly's: correctness | clarity | engagement | delivery
+ */
+
+(function (root, factory) {
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = factory();
+  } else {
+    root.QuillEngine = factory();
+  }
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  // Common misspellings -> corrections
+  const MISSPELLINGS = {
+    teh: 'the', taht: 'that', adn: 'and', nad: 'and', waht: 'what',
+    thier: 'their', recieve: 'receive', recieved: 'received',
+    seperate: 'separate', seperated: 'separated', seperately: 'separately',
+    definately: 'definitely', defiantly: 'definitely', occured: 'occurred',
+    occuring: 'occurring', untill: 'until', wich: 'which', becuase: 'because',
+    beleive: 'believe', beleived: 'believed', acheive: 'achieve',
+    acheived: 'achieved', accomodate: 'accommodate', accross: 'across',
+    agressive: 'aggressive', apparant: 'apparent', arguement: 'argument',
+    basicly: 'basically', begining: 'beginning', calender: 'calendar',
+    catagory: 'category', cemetary: 'cemetery', changable: 'changeable',
+    collegue: 'colleague', comming: 'coming', commitee: 'committee',
+    completly: 'completely', concious: 'conscious', curiousity: 'curiosity',
+    dissapoint: 'disappoint', dissapointed: 'disappointed',
+    embarass: 'embarrass', embarassing: 'embarrassing',
+    enviroment: 'environment', existance: 'existence', familar: 'familiar',
+    finaly: 'finally', foriegn: 'foreign', freind: 'friend',
+    goverment: 'government', gaurd: 'guard', happend: 'happened',
+    harrass: 'harass', immediatly: 'immediately', independant: 'independent',
+    interupt: 'interrupt', irregardless: 'regardless', knowlege: 'knowledge',
+    liason: 'liaison', libary: 'library', lisence: 'license',
+    maintainance: 'maintenance', managment: 'management', mispell: 'misspell',
+    neccessary: 'necessary', necessery: 'necessary', noticable: 'noticeable',
+    occassion: 'occasion', occassionally: 'occasionally', offical: 'official',
+    oppurtunity: 'opportunity', paralell: 'parallel', perminent: 'permanent',
+    persistant: 'persistent', posession: 'possession', prefered: 'preferred',
+    probaly: 'probably', proffesional: 'professional', promiss: 'promise',
+    pronounciation: 'pronunciation', publically: 'publicly', quater: 'quarter',
+    questionaire: 'questionnaire', reccomend: 'recommend',
+    reccommend: 'recommend', refered: 'referred', relevent: 'relevant',
+    religous: 'religious', remeber: 'remember', repitition: 'repetition',
+    restarant: 'restaurant', restaraunt: 'restaurant', rythm: 'rhythm',
+    secretery: 'secretary', similiar: 'similar', sincerly: 'sincerely',
+    succesful: 'successful', successfull: 'successful', sucess: 'success',
+    supercede: 'supersede', suprise: 'surprise', tommorow: 'tomorrow',
+    tounge: 'tongue', truely: 'truly', unfortunatly: 'unfortunately',
+    usualy: 'usually', vaccuum: 'vacuum', vegatarian: 'vegetarian',
+    vehical: 'vehicle', visable: 'visible', wierd: 'weird',
+    wellcome: 'welcome', whereever: 'wherever', alot: 'a lot',
+    stragety: 'strategy', strenght: 'strength', tomatos: 'tomatoes',
+    potatos: 'potatoes', writting: 'writing', greatful: 'grateful',
+    gratefull: 'grateful', buisness: 'business', bussiness: 'business'
+  };
+
+  // Phrase-level grammar fixes (matched case-insensitively on word boundaries)
+  const PHRASE_FIXES = [
+    { find: 'could of', fix: 'could have' },
+    { find: 'should of', fix: 'should have' },
+    { find: 'would of', fix: 'would have' },
+    { find: 'must of', fix: 'must have' },
+    { find: 'might of', fix: 'might have' },
+    { find: "he don't", fix: "he doesn't" },
+    { find: "she don't", fix: "she doesn't" },
+    { find: "it don't", fix: "it doesn't" },
+    { find: 'your welcome', fix: "you're welcome" },
+    { find: 'less people', fix: 'fewer people' },
+    { find: 'less things', fix: 'fewer things' },
+    { find: 'more better', fix: 'better' },
+    { find: 'most best', fix: 'best' },
+    { find: 'i seen', fix: 'I saw' },
+    { find: 'we was', fix: 'we were' },
+    { find: 'they was', fix: 'they were' },
+    { find: 'you was', fix: 'you were' }
+  ];
+
+  // Filler / weak words flagged for clarity
+  const FILLERS = [
+    'very', 'really', 'just', 'actually', 'basically', 'literally',
+    'quite', 'simply', 'totally', 'absolutely', 'extremely'
+  ];
+
+  const FILLER_ALTERNATIVES = {
+    very: 'Consider a stronger word instead of "very" (e.g. "very big" → "huge").',
+    really: 'Consider removing "really" or using a more precise word.',
+    just: '"Just" often weakens your message. Consider removing it.',
+    actually: '"Actually" is usually unnecessary. Consider removing it.',
+    basically: '"Basically" is usually unnecessary. Consider removing it.',
+    literally: '"Literally" is often overused. Remove it unless meant literally.',
+    quite: '"Quite" is vague. Consider a more precise word.',
+    simply: '"Simply" can sound dismissive. Consider removing it.',
+    totally: '"Totally" is informal filler. Consider removing it.',
+    absolutely: '"Absolutely" is often unnecessary emphasis.',
+    extremely: 'Consider a stronger single word instead of "extremely + adjective".'
+  };
+
+  const VOWEL_SOUND_EXCEPTIONS_AN = /^(hour|honest|honor|heir|herb)/i; // take "an"
+  const CONSONANT_SOUND_EXCEPTIONS_A = /^(university|unique|unit|user|useful|one|once|european|euro|uniform)/i; // take "a"
+
+  const SENTENCE_SPLIT = /[^.!?…]+[.!?…]*/g;
+  const WORD_RE = /[A-Za-z']+/g;
+
+  function isWordChar(ch) {
+    return /[A-Za-z']/.test(ch || '');
+  }
+
+  function matchCase(source, replacement) {
+    if (source.toUpperCase() === source && source.length > 1) {
+      return replacement.toUpperCase();
+    }
+    if (source[0] === source[0].toUpperCase()) {
+      return replacement[0].toUpperCase() + replacement.slice(1);
+    }
+    return replacement;
+  }
+
+  function issue(start, end, category, rule, message, suggestions) {
+    return { start, end, category, rule, message, suggestions: suggestions || [] };
+  }
+
+  // ---- Rules ----------------------------------------------------------
+
+  function checkSpelling(text, issues) {
+    let m;
+    const re = new RegExp(WORD_RE.source, 'g');
+    while ((m = re.exec(text)) !== null) {
+      const word = m[0];
+      const correction = MISSPELLINGS[word.toLowerCase()];
+      if (correction) {
+        issues.push(issue(
+          m.index, m.index + word.length,
+          'correctness', 'spelling',
+          `"${word}" appears to be misspelled.`,
+          [matchCase(word, correction)]
+        ));
+      }
+    }
+  }
+
+  function checkPhrases(text, issues) {
+    for (const { find, fix } of PHRASE_FIXES) {
+      const re = new RegExp('\\b' + find.replace(/'/g, "'") + '\\b', 'gi');
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        issues.push(issue(
+          m.index, m.index + m[0].length,
+          'correctness', 'grammar',
+          `"${m[0]}" is grammatically incorrect.`,
+          [matchCase(m[0], fix)]
+        ));
+      }
+    }
+  }
+
+  function checkRepeatedWords(text, issues) {
+    const re = /\b([A-Za-z]+)(\s+)\1\b/gi;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      issues.push(issue(
+        m.index, m.index + m[0].length,
+        'correctness', 'repeated-word',
+        `The word "${m[1]}" is repeated.`,
+        [m[1]]
+      ));
+    }
+  }
+
+  function checkArticles(text, issues) {
+    const re = /\b(a|an)\s+([A-Za-z]+)/gi;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const article = m[1];
+      const word = m[2];
+      const startsWithVowel = /^[aeiou]/i.test(word);
+      let wantsAn = startsWithVowel;
+      if (VOWEL_SOUND_EXCEPTIONS_AN.test(word)) wantsAn = true;
+      if (CONSONANT_SOUND_EXCEPTIONS_A.test(word)) wantsAn = false;
+
+      const hasAn = article.toLowerCase() === 'an';
+      if (wantsAn !== hasAn) {
+        const fixed = matchCase(article, wantsAn ? 'an' : 'a');
+        issues.push(issue(
+          m.index, m.index + article.length,
+          'correctness', 'article',
+          `Use "${fixed}" before "${word}".`,
+          [fixed]
+        ));
+      }
+    }
+  }
+
+  function checkSpacing(text, issues) {
+    // Multiple spaces (not at line start, ignore leading indentation)
+    let m;
+    const multi = /[^\S\n]{2,}/g;
+    while ((m = multi.exec(text)) !== null) {
+      const before = text[m.index - 1];
+      if (before === undefined || before === '\n') continue; // indentation
+      issues.push(issue(
+        m.index, m.index + m[0].length,
+        'correctness', 'spacing',
+        'Extra space found.',
+        [' ']
+      ));
+    }
+    // Missing space after punctuation: "word,word" / "end.Next"
+    const noSpace = /([A-Za-z])([,.!?;:])([A-Za-z])/g;
+    while ((m = noSpace.exec(text)) !== null) {
+      // skip decimals-ish and common abbreviations like "e.g" / URLs
+      const around = text.slice(Math.max(0, m.index - 4), m.index + 6).toLowerCase();
+      if (/e\.g|i\.e|etc\.|www\.|\.com|\.org|\.net|\.io/.test(around)) continue;
+      issues.push(issue(
+        m.index + 1, m.index + 2,
+        'correctness', 'spacing',
+        `Missing space after "${m[2]}".`,
+        [m[2] + ' ']
+      ));
+    }
+    // Space before punctuation: "word ,"
+    const spaceBefore = /([A-Za-z]) +([,.!?;:])/g;
+    while ((m = spaceBefore.exec(text)) !== null) {
+      issues.push(issue(
+        m.index + 1, m.index + m[0].length,
+        'correctness', 'spacing',
+        `Unnecessary space before "${m[2]}".`,
+        [m[2]]
+      ));
+    }
+  }
+
+  function checkCapitalization(text, issues) {
+    // Standalone lowercase "i"
+    let m;
+    const loneI = /\bi\b(?!\.e|')/g;
+    while ((m = loneI.exec(text)) !== null) {
+      issues.push(issue(
+        m.index, m.index + 1,
+        'correctness', 'capitalization',
+        'The pronoun "I" should be capitalized.',
+        ['I']
+      ));
+    }
+    // Sentence starts
+    const sentStart = /(^|[.!?]\s+)([a-z])/gm;
+    while ((m = sentStart.exec(text)) !== null) {
+      const pos = m.index + m[1].length;
+      // Skip if it's the lone "i" already flagged
+      issues.push(issue(
+        pos, pos + 1,
+        'correctness', 'capitalization',
+        'Sentences should start with a capital letter.',
+        [text[pos].toUpperCase()]
+      ));
+    }
+  }
+
+  function checkFillers(text, issues) {
+    for (const w of FILLERS) {
+      const re = new RegExp('\\b' + w + '\\b', 'gi');
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        issues.push(issue(
+          m.index, m.index + m[0].length,
+          'clarity', 'filler',
+          FILLER_ALTERNATIVES[w] || `"${m[0]}" may be unnecessary.`,
+          ['']
+        ));
+      }
+    }
+  }
+
+  function checkPassiveVoice(text, issues) {
+    const re = /\b(is|are|was|were|been|being|be)\s+(\w+ed)\b/gi;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      // skip common false positives (adjectives that end in -ed)
+      if (/^(tired|excited|interested|worried|pleased|surprised|used|supposed)$/i.test(m[2])) continue;
+      issues.push(issue(
+        m.index, m.index + m[0].length,
+        'engagement', 'passive-voice',
+        `"${m[0]}" may be passive voice. Active voice is usually more engaging.`,
+        []
+      ));
+    }
+  }
+
+  function checkLongSentences(text, issues) {
+    let m;
+    const re = new RegExp(SENTENCE_SPLIT.source, 'g');
+    while ((m = re.exec(text)) !== null) {
+      const words = m[0].match(WORD_RE);
+      if (words && words.length > 30) {
+        const start = m.index + (m[0].length - m[0].trimStart().length);
+        issues.push(issue(
+          start, m.index + m[0].length,
+          'clarity', 'long-sentence',
+          `This sentence has ${words.length} words. Consider splitting it for readability.`,
+          []
+        ));
+      }
+    }
+  }
+
+  // ---- Stats ----------------------------------------------------------
+
+  function countSyllables(word) {
+    word = word.toLowerCase().replace(/[^a-z]/g, '');
+    if (!word) return 0;
+    if (word.length <= 3) return 1;
+    word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+    const groups = word.match(/[aeiouy]{1,2}/g);
+    return groups ? groups.length : 1;
+  }
+
+  function computeStats(text, issues) {
+    const words = text.match(WORD_RE) || [];
+    const sentences = (text.match(SENTENCE_SPLIT) || []).filter(s => s.trim());
+    const wordCount = words.length;
+    const sentenceCount = Math.max(sentences.length, wordCount ? 1 : 0);
+    const syllables = words.reduce((n, w) => n + countSyllables(w), 0);
+
+    let flesch = 0;
+    if (wordCount > 0) {
+      flesch = 206.835 - 1.015 * (wordCount / sentenceCount) - 84.6 * (syllables / wordCount);
+      flesch = Math.max(0, Math.min(100, Math.round(flesch)));
+    }
+
+    // Overall score: start at 100, subtract weighted penalties, scaled by length
+    const weights = { correctness: 3, clarity: 1.5, engagement: 1, delivery: 1 };
+    const penalty = issues.reduce((n, i) => n + (weights[i.category] || 1), 0);
+    const scale = Math.max(wordCount / 25, 1);
+    const score = wordCount === 0 ? 100 : Math.max(0, Math.round(100 - (penalty / scale) * 4));
+
+    return {
+      words: wordCount,
+      characters: text.length,
+      sentences: wordCount ? sentences.length : 0,
+      readingTimeSec: Math.ceil((wordCount / 225) * 60),
+      readability: flesch,
+      score,
+      tone: detectTone(text)
+    };
+  }
+
+  function detectTone(text) {
+    if (!text.trim()) return 'Neutral';
+    const lower = text.toLowerCase();
+    const exclaims = (text.match(/!/g) || []).length;
+    const contractions = (text.match(/\b\w+'(t|s|re|ll|ve|d|m)\b/gi) || []).length;
+    const formalWords = (lower.match(/\b(therefore|furthermore|moreover|consequently|regarding|pursuant|hereby|accordingly)\b/g) || []).length;
+    const friendlyWords = (lower.match(/\b(thanks|thank you|please|great|awesome|love|happy|glad)\b/g) || []).length;
+    const confidentWords = (lower.match(/\b(will|definitely|certainly|guarantee|must|always|never)\b/g) || []).length;
+
+    if (formalWords >= 2 && contractions === 0) return 'Formal';
+    if (exclaims >= 2 || friendlyWords >= 2) return 'Friendly';
+    if (confidentWords >= 3) return 'Confident';
+    if (contractions >= 3) return 'Casual';
+    return 'Neutral';
+  }
+
+  // ---- Entry point ----------------------------------------------------
+
+  function checkText(text) {
+    const issues = [];
+    checkSpelling(text, issues);
+    checkPhrases(text, issues);
+    checkRepeatedWords(text, issues);
+    checkArticles(text, issues);
+    checkSpacing(text, issues);
+    checkCapitalization(text, issues);
+    checkFillers(text, issues);
+    checkPassiveVoice(text, issues);
+    checkLongSentences(text, issues);
+
+    // Sort by position; drop exact-range duplicates (keep the first = higher priority)
+    issues.sort((a, b) => a.start - b.start || a.end - b.end);
+    const seen = new Set();
+    const deduped = issues.filter(i => {
+      const key = i.start + ':' + i.end + ':' + i.rule;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return { issues: deduped, stats: computeStats(text, deduped) };
+  }
+
+  return { checkText, matchCase, countSyllables, detectTone };
+});
+
+</script>
+  <script>
+/* QuillCheck renderer — wires the engine to the editor UI. */
+(function () {
+  'use strict';
+
+  const editor = document.getElementById('editor');
+  const backdrop = document.getElementById('backdrop');
+  const cardsEl = document.getElementById('cards');
+  const emptyState = document.getElementById('emptyState');
+  const scoreNum = document.getElementById('scoreNum');
+  const scoreRing = document.getElementById('scoreRing');
+  const toneChip = document.getElementById('toneChip');
+  const filtersEl = document.getElementById('filters');
+
+  const RING_CIRC = 100.5; // matches stroke-dasharray in CSS
+
+  let issues = [];
+  let activeFilter = 'all';
+  let selectedIndex = -1;
+  // Dismissals survive re-checks: keyed by rule + the exact flagged text.
+  const dismissed = new Set();
+
+  const debounce = (fn, ms) => {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  };
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function dismissKey(text, iss) {
+    return iss.rule + '|' + text.slice(iss.start, iss.end);
+  }
+
+  // ---- Analysis --------------------------------------------------------
+
+  function analyze() {
+    const text = editor.value;
+    const result = QuillEngine.checkText(text);
+    issues = result.issues.filter(i => !dismissed.has(dismissKey(text, i)));
+    renderHighlights(text);
+    renderCards(text);
+    renderStats(result.stats);
+  }
+
+  const analyzeDebounced = debounce(analyze, 250);
+
+  // ---- Highlights ------------------------------------------------------
+
+  function renderHighlights(text) {
+    let html = '';
+    let pos = 0;
+    // Issues are sorted; skip overlaps so marks never nest.
+    for (let k = 0; k < issues.length; k++) {
+      const i = issues[k];
+      if (i.start < pos) continue;
+      html += escapeHtml(text.slice(pos, i.start));
+      const cls = i.category + (k === selectedIndex ? ' active-issue' : '');
+      html += '<mark class="' + cls + '">' + escapeHtml(text.slice(i.start, i.end)) + '</mark>';
+      pos = i.end;
+    }
+    html += escapeHtml(text.slice(pos));
+    // Trailing newline needs a filler char so the backdrop matches textarea height
+    backdrop.innerHTML = html + '\n';
+    syncScroll();
+  }
+
+  function syncScroll() {
+    backdrop.scrollTop = editor.scrollTop;
+    backdrop.scrollLeft = editor.scrollLeft;
+  }
+
+  // ---- Sidebar cards ---------------------------------------------------
+
+  function excerptFor(text, iss) {
+    const flagged = text.slice(iss.start, iss.end);
+    const fix = iss.suggestions[0];
+    if (fix !== undefined && fix !== '' && iss.suggestions.length) {
+      return '<s>' + escapeHtml(flagged) + '</s> → <span class="fix">' + escapeHtml(fix) + '</span>';
+    }
+    if (fix === '') {
+      return '<s>' + escapeHtml(flagged) + '</s> <span class="fix">(remove)</span>';
+    }
+    const short = flagged.length > 60 ? flagged.slice(0, 57) + '…' : flagged;
+    return '“' + escapeHtml(short) + '”';
+  }
+
+  function renderCards(text) {
+    const visible = issues
+      .map((iss, idx) => ({ iss, idx }))
+      .filter(({ iss }) => activeFilter === 'all' || iss.category === activeFilter);
+
+    // Counts
+    const counts = { all: issues.length, correctness: 0, clarity: 0, engagement: 0 };
+    for (const i of issues) if (counts[i.category] !== undefined) counts[i.category]++;
+    document.getElementById('countAll').textContent = counts.all;
+    document.getElementById('countCorrectness').textContent = counts.correctness;
+    document.getElementById('countClarity').textContent = counts.clarity;
+    document.getElementById('countEngagement').textContent = counts.engagement;
+
+    cardsEl.querySelectorAll('.card').forEach(c => c.remove());
+    emptyState.style.display = visible.length ? 'none' : '';
+
+    for (const { iss, idx } of visible) {
+      const card = document.createElement('div');
+      card.className = 'card' + (idx === selectedIndex ? ' selected' : '');
+      card.innerHTML =
+        '<div class="card-top"><span class="dot ' + iss.category + '"></span>' +
+        '<span class="card-cat">' + iss.category + '</span></div>' +
+        '<div class="card-excerpt">' + excerptFor(text, iss) + '</div>' +
+        '<div class="card-msg">' + escapeHtml(iss.message) + '</div>' +
+        '<div class="card-actions">' +
+        (iss.suggestions.length ? '<button class="btn btn-apply">Apply</button>' : '') +
+        '<button class="btn btn-dismiss">Dismiss</button></div>';
+
+      card.addEventListener('click', () => selectIssue(idx));
+      const applyBtn = card.querySelector('.btn-apply');
+      if (applyBtn) applyBtn.addEventListener('click', e => { e.stopPropagation(); applyFix(idx); });
+      card.querySelector('.btn-dismiss').addEventListener('click', e => { e.stopPropagation(); dismissIssue(idx); });
+      cardsEl.appendChild(card);
+    }
+  }
+
+  function selectIssue(idx) {
+    selectedIndex = idx;
+    const iss = issues[idx];
+    renderHighlights(editor.value);
+    renderCards(editor.value);
+    if (iss) {
+      editor.focus();
+      editor.setSelectionRange(iss.start, iss.end);
+      // Rough scroll-into-view: put caret line near the middle
+      const before = editor.value.slice(0, iss.start);
+      const line = before.split('\n').length;
+      const lineHeight = 17 * 1.7;
+      editor.scrollTop = Math.max(0, line * lineHeight - editor.clientHeight / 2);
+      syncScroll();
+    }
+  }
+
+  function applyFix(idx) {
+    const iss = issues[idx];
+    if (!iss || !iss.suggestions.length) return;
+    let replacement = iss.suggestions[0];
+    let { start, end } = iss;
+    // Removing a filler word: also swallow one following space
+    if (replacement === '') {
+      if (editor.value[end] === ' ') end++;
+      else if (editor.value[start - 1] === ' ') start--;
+    }
+    editor.setRangeText(replacement, start, end, 'end');
+    selectedIndex = -1;
+    analyze();
+    editor.focus();
+  }
+
+  function dismissIssue(idx) {
+    const iss = issues[idx];
+    if (!iss) return;
+    dismissed.add(dismissKey(editor.value, iss));
+    selectedIndex = -1;
+    analyze();
+  }
+
+  // ---- Stats + score ---------------------------------------------------
+
+  function renderStats(stats) {
+    document.getElementById('statWords').textContent = stats.words + ' words';
+    document.getElementById('statChars').textContent = stats.characters + ' characters';
+    document.getElementById('statSentences').textContent = stats.sentences + ' sentences';
+    document.getElementById('statTime').textContent =
+      stats.readingTimeSec < 60
+        ? stats.readingTimeSec + ' sec read'
+        : Math.round(stats.readingTimeSec / 60) + ' min read';
+    document.getElementById('statReadability').textContent =
+      stats.words ? 'Readability ' + stats.readability : 'Readability —';
+
+    scoreNum.textContent = stats.score;
+    scoreRing.style.strokeDashoffset = RING_CIRC * (1 - stats.score / 100);
+    scoreRing.style.stroke =
+      stats.score >= 80 ? 'var(--green)' : stats.score >= 50 ? '#f2b824' : 'var(--red)';
+    toneChip.textContent = stats.tone;
+  }
+
+  // ---- Filters ---------------------------------------------------------
+
+  filtersEl.addEventListener('click', e => {
+    const btn = e.target.closest('.filter');
+    if (!btn) return;
+    activeFilter = btn.dataset.cat;
+    filtersEl.querySelectorAll('.filter').forEach(f => f.classList.toggle('active', f === btn));
+    renderCards(editor.value);
+  });
+
+  // ---- Events ----------------------------------------------------------
+
+  editor.addEventListener('input', () => {
+    selectedIndex = -1;
+    analyzeDebounced();
+  });
+  editor.addEventListener('scroll', syncScroll);
+
+  analyze();
+})();
+
+</script>
+</body>
+</html>
