@@ -20,6 +20,14 @@ leaves your Mac.
 - **Tone detector** (Formal / Friendly / Confident / Casual / Neutral)
 - **Live stats**: words, characters, sentences, reading time, Flesch readability
 
+## Zero-install option (no Node, no Terminal)
+
+Don't want to install anything? Download
+[`standalone/QuillCheck.html`](standalone/QuillCheck.html) and double-click it —
+it opens in your browser and runs entirely locally, offline. It's the exact same
+editor and checking engine as the desktop app, bundled into one file.
+Regenerate it after engine/UI changes with `node build-standalone.js`.
+
 ## Run it on your Mac
 
 Requires [Node.js](https://nodejs.org) 18+.
