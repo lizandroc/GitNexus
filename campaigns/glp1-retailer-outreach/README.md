@@ -107,9 +107,16 @@ before launch. To use it for real:
 2. Set `"dataMode": "live"` and remove the sample banner from `dashboard.template.html`.
 3. Run `node build.mjs`.
 
-`build.mjs` refuses to write if the numbers don't reconcile — the funnel stages and the
-weekly series must both sum to the segment totals — so a bad export fails loudly instead of
-rendering a plausible wrong dashboard.
+`weeklyBySegment[segment][metric][week]` holds the real per-segment weekly values. Its
+margins must be exact in **both** directions: each segment's row sums to that segment's
+total, and each week's column sums to the campaign total in `weekly`. That is what keeps a
+filtered trend line agreeing with the KPI tile above it — the earlier version apportioned
+campaign totals by segment share, which produced trends that quietly contradicted the tiles.
+
+`build.mjs` refuses to write if anything doesn't reconcile — funnel stages, and every row
+and column of every `weeklyBySegment` metric — so a bad export fails loudly instead of
+rendering a plausible wrong dashboard. KPI deltas and all rate targets are derived from the
+data rather than stored, so they can't drift out of date.
 
 ```bash
 node build.mjs

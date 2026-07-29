@@ -13,7 +13,6 @@
     "weekIndex": 7,
     "weeksTotal": 15
   },
-
   "kpis": [
     {
       "id": "pipeline",
@@ -21,7 +20,6 @@
       "value": 2050000,
       "target": 2100000,
       "format": "currency",
-      "delta": 315000,
       "deltaLabel": "vs last week",
       "hero": true
     },
@@ -31,7 +29,6 @@
       "value": 1050,
       "target": 1800,
       "format": "int",
-      "delta": 214,
       "deltaLabel": "vs last week"
     },
     {
@@ -40,7 +37,6 @@
       "value": 8.9,
       "target": 9.0,
       "format": "pct",
-      "delta": 0.4,
       "deltaLabel": "vs last week"
     },
     {
@@ -49,7 +45,6 @@
       "value": 3.4,
       "target": 3.4,
       "format": "pct",
-      "delta": 0.2,
       "deltaLabel": "vs last week"
     },
     {
@@ -58,7 +53,6 @@
       "value": 28,
       "target": 96,
       "format": "int",
-      "delta": 8,
       "deltaLabel": "vs last week"
     },
     {
@@ -67,19 +61,36 @@
       "value": 16,
       "target": 54,
       "format": "int",
-      "delta": 4,
       "deltaLabel": "vs last week"
     }
   ],
-
   "funnel": [
-    { "stage": "Sourced", "value": 2140, "note": "Accounts researched and list-qualified" },
-    { "stage": "Contacted", "value": 1050, "note": "Entered a sequence, first touch sent" },
-    { "stage": "Engaged", "value": 368, "note": "Opened, accepted a connection, or viewed back" },
-    { "stage": "Replied", "value": 93, "note": "Any human reply" },
-    { "stage": "Meeting", "value": 28, "note": "Discovery call on the calendar" }
+    {
+      "stage": "Sourced",
+      "value": 2140,
+      "note": "Accounts researched and list-qualified"
+    },
+    {
+      "stage": "Contacted",
+      "value": 1050,
+      "note": "Entered a sequence, first touch sent"
+    },
+    {
+      "stage": "Engaged",
+      "value": 368,
+      "note": "Opened, accepted a connection, or viewed back"
+    },
+    {
+      "stage": "Replied",
+      "value": 93,
+      "note": "Any human reply"
+    },
+    {
+      "stage": "Meeting",
+      "value": 28,
+      "note": "Discovery call on the calendar"
+    }
   ],
-
   "segmentTargetNote": "targetContacted sums to 1800, targetMeetings to 96, targetSqls to 54, targetPipeline to 2100000 — the campaign totals in `kpis`. Rate targets (reply, positive reply) are campaign-wide and apply unchanged to every segment.",
   "segments": [
     {
@@ -215,17 +226,71 @@
       "targetPipeline": 200000
     }
   ],
-
   "weekly": [
-    { "week": "Jun 15", "contacted": 42, "replied": 2, "meetings": 0 },
-    { "week": "Jun 22", "contacted": 96, "replied": 6, "meetings": 1 },
-    { "week": "Jun 29", "contacted": 134, "replied": 11, "meetings": 3 },
-    { "week": "Jul 6", "contacted": 168, "replied": 14, "meetings": 4 },
-    { "week": "Jul 13", "contacted": 192, "replied": 17, "meetings": 5 },
-    { "week": "Jul 20", "contacted": 204, "replied": 20, "meetings": 7 },
-    { "week": "Jul 27", "contacted": 214, "replied": 23, "meetings": 8 }
+    {
+      "week": "Jun 15",
+      "contacted": 42,
+      "replied": 2,
+      "meetings": 0,
+      "positive": 1,
+      "sqls": 0,
+      "pipeline": 90000
+    },
+    {
+      "week": "Jun 22",
+      "contacted": 96,
+      "replied": 6,
+      "meetings": 1,
+      "positive": 2,
+      "sqls": 1,
+      "pipeline": 175000
+    },
+    {
+      "week": "Jun 29",
+      "contacted": 134,
+      "replied": 11,
+      "meetings": 3,
+      "positive": 4,
+      "sqls": 2,
+      "pipeline": 255000
+    },
+    {
+      "week": "Jul 6",
+      "contacted": 168,
+      "replied": 14,
+      "meetings": 4,
+      "positive": 5,
+      "sqls": 2,
+      "pipeline": 310000
+    },
+    {
+      "week": "Jul 13",
+      "contacted": 192,
+      "replied": 17,
+      "meetings": 5,
+      "positive": 7,
+      "sqls": 3,
+      "pipeline": 375000
+    },
+    {
+      "week": "Jul 20",
+      "contacted": 204,
+      "replied": 20,
+      "meetings": 7,
+      "positive": 8,
+      "sqls": 4,
+      "pipeline": 530000
+    },
+    {
+      "week": "Jul 27",
+      "contacted": 214,
+      "replied": 23,
+      "meetings": 8,
+      "positive": 9,
+      "sqls": 4,
+      "pipeline": 315000
+    }
   ],
-
   "sequences": [
     {
       "id": "SEQ-A",
@@ -237,8 +302,20 @@
       "automation": "eligible",
       "status": "running",
       "active": 214,
-      "benchmarks": { "accept": 32, "open": 46, "reply": 11, "positive": 4.2, "meeting": 2.4 },
-      "actuals": { "accept": 29, "open": 44, "reply": 9.2, "positive": 3.3, "meeting": 2.1 },
+      "benchmarks": {
+        "accept": 32,
+        "open": 46,
+        "reply": 11,
+        "positive": 4.2,
+        "meeting": 2.4
+      },
+      "actuals": {
+        "accept": 29,
+        "open": 44,
+        "reply": 9.2,
+        "positive": 3.3,
+        "meeting": 2.1
+      },
       "steps": [
         {
           "n": 1,
@@ -333,8 +410,20 @@
       "automation": "email only",
       "status": "running",
       "active": 168,
-      "benchmarks": { "accept": 28, "open": 43, "reply": 9, "positive": 3.5, "meeting": 2.0 },
-      "actuals": { "accept": 26, "open": 41, "reply": 8.6, "positive": 3.3, "meeting": 2.8 },
+      "benchmarks": {
+        "accept": 28,
+        "open": 43,
+        "reply": 9,
+        "positive": 3.5,
+        "meeting": 2.0
+      },
+      "actuals": {
+        "accept": 26,
+        "open": 41,
+        "reply": 8.6,
+        "positive": 3.3,
+        "meeting": 2.8
+      },
       "steps": [
         {
           "n": 1,
@@ -447,8 +536,20 @@
       "automation": "none",
       "status": "running",
       "active": 74,
-      "benchmarks": { "accept": 24, "open": 51, "reply": 7, "positive": 3.0, "meeting": 1.8 },
-      "actuals": { "accept": 22, "open": 54, "reply": 8.8, "positive": 4.1, "meeting": 4.1 },
+      "benchmarks": {
+        "accept": 24,
+        "open": 51,
+        "reply": 7,
+        "positive": 3.0,
+        "meeting": 1.8
+      },
+      "actuals": {
+        "accept": 22,
+        "open": 54,
+        "reply": 8.8,
+        "positive": 4.1,
+        "meeting": 4.1
+      },
       "steps": [
         {
           "n": 1,
@@ -570,8 +671,20 @@
       "automation": "email only",
       "status": "scheduled",
       "active": 0,
-      "benchmarks": { "accept": 0, "open": 38, "reply": 6, "positive": 2.2, "meeting": 1.1 },
-      "actuals": { "accept": 0, "open": 0, "reply": 0, "positive": 0, "meeting": 0 },
+      "benchmarks": {
+        "accept": 0,
+        "open": 38,
+        "reply": 6,
+        "positive": 2.2,
+        "meeting": 1.1
+      },
+      "actuals": {
+        "accept": 0,
+        "open": 0,
+        "reply": 0,
+        "positive": 0,
+        "meeting": 0
+      },
       "steps": [
         {
           "n": 1,
@@ -621,7 +734,6 @@
       ]
     }
   ],
-
   "leads": [
     {
       "account": "Northlight Aesthetics",
@@ -863,5 +975,56 @@
       "lastTouch": "2026-07-27",
       "sentiment": "positive"
     }
-  ]
+  ],
+  "weeklyBySegment": {
+    "S1": {
+      "contacted": [20, 47, 66, 82, 94, 99, 104],
+      "replied": [1, 3, 5, 7, 9, 10, 12],
+      "positive": [1, 1, 2, 2, 3, 4, 4],
+      "meetings": [0, 0, 1, 2, 2, 3, 3],
+      "sqls": [0, 0, 1, 1, 1, 2, 1],
+      "pipeline": [13610, 26463, 38561, 46879, 56707, 80146, 47634]
+    },
+    "S2": {
+      "contacted": [6, 13, 19, 24, 27, 29, 30],
+      "replied": [1, 1, 2, 2, 2, 3, 3],
+      "positive": [0, 0, 1, 1, 1, 1, 2],
+      "meetings": [0, 0, 1, 1, 1, 1, 1],
+      "sqls": [0, 0, 0, 0, 1, 1, 1],
+      "pipeline": [18878, 36707, 53488, 65024, 78659, 111171, 66073]
+    },
+    "S3": {
+      "contacted": [7, 15, 21, 27, 31, 33, 34],
+      "replied": [0, 1, 2, 2, 2, 3, 3],
+      "positive": [0, 0, 1, 1, 1, 1, 1],
+      "meetings": [0, 0, 0, 1, 1, 1, 1],
+      "sqls": [0, 0, 1, 0, 0, 0, 1],
+      "pipeline": [9439, 18354, 26744, 32512, 39329, 55585, 33037]
+    },
+    "S4": {
+      "contacted": [2, 5, 7, 8, 9, 10, 11],
+      "replied": [0, 0, 0, 1, 1, 1, 1],
+      "positive": [0, 0, 0, 0, 0, 1, 1],
+      "meetings": [0, 0, 0, 0, 0, 1, 1],
+      "sqls": [0, 0, 0, 1, 0, 0, 0],
+      "pipeline": [17341, 33720, 49134, 59732, 72256, 102122, 60695]
+    },
+    "S5": {
+      "contacted": [4, 9, 12, 15, 17, 19, 20],
+      "replied": [0, 1, 1, 1, 2, 2, 2],
+      "positive": [0, 0, 0, 1, 1, 1, 1],
+      "meetings": [0, 0, 1, 0, 1, 1, 1],
+      "sqls": [0, 0, 0, 0, 1, 1, 1],
+      "pipeline": [22830, 44390, 64683, 78634, 95122, 134439, 79902]
+    },
+    "S6": {
+      "contacted": [3, 7, 9, 12, 14, 14, 15],
+      "replied": [0, 0, 1, 1, 1, 1, 2],
+      "positive": [0, 1, 0, 0, 1, 0, 0],
+      "meetings": [0, 1, 0, 0, 0, 0, 1],
+      "sqls": [0, 1, 0, 0, 0, 0, 0],
+      "pipeline": [7902, 15366, 22390, 27219, 32927, 46537, 27659]
+    }
+  },
+  "weeklyNote": "weeklyBySegment[segment][metric][weekIndex]. Every metric's matrix has exact margins: each segment's row sums to that segment's total, and each week's column sums to the campaign total in `weekly`. Filtered weekly trends therefore always agree with the KPI tiles. build.mjs enforces both margins."
 }

@@ -27,14 +27,32 @@ const checks = [
   ['funnel Engaged', funnel.Engaged, sum('engaged')],
   ['funnel Replied', funnel.Replied, sum('replied')],
   ['funnel Meeting', funnel.Meeting, sum('meetings')],
-  ['weekly contacted', data.weekly.reduce((t, w) => t + w.contacted, 0), sum('contacted')],
-  ['weekly replied', data.weekly.reduce((t, w) => t + w.replied, 0), sum('replied')],
-  ['weekly meetings', data.weekly.reduce((t, w) => t + w.meetings, 0), sum('meetings')],
 ];
+
+// weeklyBySegment must have EXACT margins on both axes. A row that misses its segment total
+// makes a filtered trend contradict the KPI tile above it; a column that misses the week
+// total makes the unfiltered trend wrong. Either way the chart states something the data
+// does not support, so refuse to build rather than render it.
+const METRICS = ['contacted', 'replied', 'positive', 'meetings', 'sqls', 'pipeline'];
+const wbs = data.weeklyBySegment;
+if (!wbs) throw new Error('campaign.json is missing weeklyBySegment');
+for (const m of METRICS) {
+  for (const s of data.segments) {
+    const row = wbs[s.id]?.[m];
+    if (!Array.isArray(row) || row.length !== data.weekly.length)
+      throw new Error(`weeklyBySegment.${s.id}.${m} must have ${data.weekly.length} weeks`);
+    checks.push([`weeklyBySegment ${s.id}.${m} row`, row.reduce((t, v) => t + v, 0), s[m]]);
+  }
+  data.weekly.forEach((w, i) => {
+    const col = data.segments.reduce((t, s) => t + wbs[s.id][m][i], 0);
+    checks.push([`weeklyBySegment week ${w.week} ${m} column`, col, w[m]]);
+  });
+}
+
 const bad = checks.filter(([, a, b]) => a !== b);
 if (bad.length) {
   console.error('campaign.json totals do not reconcile:');
-  for (const [name, a, b] of bad) console.error(`  ${name}: ${a} != segment sum ${b}`);
+  for (const [name, a, b] of bad) console.error(`  ${name}: ${a} != expected ${b}`);
   process.exit(1);
 }
 

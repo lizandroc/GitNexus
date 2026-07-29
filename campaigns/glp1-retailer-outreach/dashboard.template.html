@@ -646,7 +646,7 @@
         <div class="cardhead">
           <div>
             <h2 id="h-seg">Reply rate by segment</h2>
-            <p class="cap">Against the 9.0% campaign target</p>
+            <p class="cap" id="seg-cap">Against the campaign reply-rate target</p>
           </div>
           <div class="seg" role="group" aria-label="Segment view">
             <button type="button" data-view="seg" data-mode="chart" aria-pressed="true">
@@ -801,52 +801,28 @@
       }, 0);
     }
 
-    /* Largest-remainder split of a weekly total across segments, by share of `by`.
-     Precomputed for all segments so filtering is a plain sum and totals never drift. */
-    function splitWeeks(metric) {
-      var tot = sum(SEGS, 'contacted'),
-        out = {};
-      SEGS.forEach(function (g) {
-        out[g.id] = [];
-      });
-      WEEKS.forEach(function (w) {
-        var exact = SEGS.map(function (g) {
-          return (w[metric] * g.contacted) / tot;
-        });
-        var base = exact.map(Math.floor);
-        var rem =
-          w[metric] -
-          base.reduce(function (a, b) {
-            return a + b;
-          }, 0);
-        exact
-          .map(function (v, i) {
-            return { i: i, r: v - base[i] };
-          })
-          .sort(function (a, b) {
-            return b.r - a.r;
-          })
-          .slice(0, rem)
-          .forEach(function (o) {
-            base[o.i]++;
-          });
-        SEGS.forEach(function (g, i) {
-          out[g.id].push(base[i]);
-        });
-      });
-      return out;
-    }
-    var WK = {
-      contacted: splitWeeks('contacted'),
-      replied: splitWeeks('replied'),
-      meetings: splitWeeks('meetings'),
-    };
+    /* Real per-segment weekly values, straight from the data — never reconstructed from
+     campaign aggregates. Each metric's matrix has exact margins (segment rows sum to that
+     segment's total, week columns sum to the campaign total), so a filtered trend always
+     agrees with the KPI tiles above it. */
+    var WBS = D.weeklyBySegment;
     function weekSeries(metric) {
       return WEEKS.map(function (_, i) {
         return sel().reduce(function (t, g) {
-          return t + WK[metric][g.id][i];
+          return t + WBS[g.id][metric][i];
         }, 0);
       });
+    }
+    /* Cumulative value of a metric through week `upto` (inclusive) for the selection. */
+    function cumulative(metric, upto) {
+      return sel().reduce(function (t, g) {
+        return (
+          t +
+          WBS[g.id][metric].slice(0, upto + 1).reduce(function (a, b) {
+            return a + b;
+          }, 0)
+        );
+      }, 0);
     }
 
     /* ---------- tooltip ---------- */
@@ -937,56 +913,84 @@
     });
 
     /* ---------- KPIs ---------- */
+    /* Rate targets come from campaign.json (kpis[].target) — never hard-coded here, or the
+       dashboard would silently report against obsolete goals when the data is updated. */
+    function kpiTarget(id) {
+      var k = D.kpis.filter(function (x) {
+        return x.id === id;
+      })[0];
+      return k ? k.target : 0;
+    }
     function renderKpis() {
       var g = sel(),
-        host = document.getElementById('kpis');
+        host = document.getElementById('kpis'),
+        last = WEEKS.length - 1;
       host.innerHTML = '';
-      var share = sum(g, 'contacted') / sum(SEGS, 'contacted') || 0;
+      /* Every delta is measured from the real weekly series for the current selection —
+         count metrics from the latest week, rate metrics as the change in the cumulative
+         rate. Nothing is apportioned or carried over from the unfiltered view. */
+      var rateNow = function (n, d) {
+          return pct(cumulative(n, last), cumulative(d, last));
+        },
+        ratePrev = function (n, d) {
+          return last > 0 ? pct(cumulative(n, last - 1), cumulative(d, last - 1)) : 0;
+        };
       var vals = {
-        pipeline: { v: sum(g, 'pipeline'), t: sum(g, 'targetPipeline') },
-        contacted: { v: sum(g, 'contacted'), t: sum(g, 'targetContacted') },
-        replyRate: { v: pct(sum(g, 'replied'), sum(g, 'contacted')), t: 9.0 },
-        posReply: { v: pct(sum(g, 'positive'), sum(g, 'contacted')), t: 3.4 },
-        meetings: { v: sum(g, 'meetings'), t: sum(g, 'targetMeetings') },
-        sqls: { v: sum(g, 'sqls'), t: sum(g, 'targetSqls') },
+        pipeline: {
+          v: sum(g, 'pipeline'),
+          t: sum(g, 'targetPipeline'),
+          d: weekSeries('pipeline')[last],
+        },
+        contacted: {
+          v: sum(g, 'contacted'),
+          t: sum(g, 'targetContacted'),
+          d: weekSeries('contacted')[last],
+        },
+        replyRate: {
+          v: rateNow('replied', 'contacted'),
+          t: kpiTarget('replyRate'),
+          d: rateNow('replied', 'contacted') - ratePrev('replied', 'contacted'),
+        },
+        posReply: {
+          v: rateNow('positive', 'contacted'),
+          t: kpiTarget('posReply'),
+          d: rateNow('positive', 'contacted') - ratePrev('positive', 'contacted'),
+        },
+        meetings: {
+          v: sum(g, 'meetings'),
+          t: sum(g, 'targetMeetings'),
+          d: weekSeries('meetings')[last],
+        },
+        sqls: { v: sum(g, 'sqls'), t: sum(g, 'targetSqls'), d: weekSeries('sqls')[last] },
       };
       D.kpis.forEach(function (k) {
-        var d = vals[k.id],
-          isRate = k.format === 'pct';
+        var d = vals[k.id];
         var card = el('div', { class: 'card' + (k.hero ? ' hero' : '') });
         card.appendChild(el('p', { class: 'tile-label', text: k.label }));
         card.appendChild(el('div', { class: 'tile-value', text: fmt(d.v, k.format) }));
-        var delta = isRate ? k.delta : Math.round(k.delta * share);
+        var delta = k.format === 'pct' ? Math.round(d.d * 10) / 10 : d.d;
         if (delta) {
-          var cls = delta > 0 ? 'up' : 'dn',
-            arrow = delta > 0 ? '▲' : '▼';
-          card.appendChild(
-            el('p', {
-              class: 'tile-delta',
-              html:
-                '<span class="' +
-                cls +
-                '">' +
-                arrow +
-                ' ' +
-                fmt(Math.abs(delta), k.format) +
-                '</span> ' +
-                k.deltaLabel,
+          var p = el('p', { class: 'tile-delta' });
+          p.appendChild(
+            el('span', {
+              class: delta > 0 ? 'up' : 'dn',
+              text: (delta > 0 ? '▲ ' : '▼ ') + fmt(Math.abs(delta), k.format),
             }),
           );
+          p.appendChild(document.createTextNode(' ' + k.deltaLabel));
+          card.appendChild(p);
         }
-        var p = Math.min(100, pct(d.v, d.t));
+        var pc = Math.min(100, pct(d.v, d.t));
         var m = el('div', { class: 'meter' });
         var track = el('div', { class: 'meter-track' });
-        track.appendChild(el('div', { class: 'meter-fill', style: 'width:' + p.toFixed(1) + '%' }));
-        m.appendChild(track);
-        m.appendChild(
-          el('div', {
-            class: 'meter-cap',
-            html:
-              '<span>' + p.toFixed(0) + '% of target</span><span>' + fmt(d.t, k.format) + '</span>',
-          }),
+        track.appendChild(
+          el('div', { class: 'meter-fill', style: 'width:' + pc.toFixed(1) + '%' }),
         );
+        m.appendChild(track);
+        var cap = el('div', { class: 'meter-cap' });
+        cap.appendChild(el('span', { text: pc.toFixed(0) + '% of target' }));
+        cap.appendChild(el('span', { text: fmt(d.t, k.format) }));
+        m.appendChild(cap);
         card.appendChild(m);
         host.appendChild(card);
       });
@@ -1112,7 +1116,7 @@
         .sort(function (a, b) {
           return b.rate - a.rate;
         });
-      var target = 9.0;
+      var target = kpiTarget('replyRate');
       var max =
         Math.max(
           target,
@@ -1145,7 +1149,7 @@
           y: H - 10,
           class: 'tick',
           'text-anchor': 'middle',
-          text: 'target 9.0%',
+          text: 'target ' + target.toFixed(1) + '%',
         }),
       );
       g.forEach(function (r, i) {
@@ -1181,7 +1185,7 @@
           class: 'hit',
         });
         bindTip(hit, r.id + ' · ' + r.name, [
-          'Reply rate ' + r.rate.toFixed(1) + '% (target 9.0%)',
+          'Reply rate ' + r.rate.toFixed(1) + '% (target ' + target.toFixed(1) + '%)',
           r.replied + ' replies from ' + r.contacted.toLocaleString('en-US') + ' contacted',
           'Motion ' + r.motion,
         ]);
@@ -1372,7 +1376,21 @@
     function renderSeq() {
       var tabs = document.getElementById('seq-tabs');
       tabs.innerHTML = '';
-      SEQS.forEach(function (q) {
+      /* The filter row promises it scopes everything below it, so the board offers only
+         sequences that actually serve a selected segment. */
+      var avail = SEQS.filter(function (q) {
+        return q.segments.some(function (id) {
+          return state.segs.has(id);
+        });
+      });
+      if (!avail.length) avail = SEQS;
+      if (
+        !avail.some(function (q) {
+          return q.id === state.seq;
+        })
+      )
+        state.seq = avail[0].id;
+      avail.forEach(function (q) {
         var b = el('button', { class: 'tab', type: 'button', text: q.id + ' · ' + q.name });
         b.setAttribute('aria-pressed', String(q.id === state.seq));
         b.addEventListener('click', function () {
@@ -1381,7 +1399,7 @@
         });
         tabs.appendChild(b);
       });
-      var q = SEQS.filter(function (x) {
+      var q = avail.filter(function (x) {
         return x.id === state.seq;
       })[0];
       document.getElementById('seq-cap').textContent =
@@ -1664,7 +1682,20 @@
         x.appendChild(el('td', { text: l.segment }));
         x.appendChild(el('td', { text: l.contact }));
         x.appendChild(el('td', { text: l.persona }));
-        x.appendChild(el('td', { html: '<a href="mailto:' + l.email + '">' + l.email + '</a>' }));
+        /* Imported lead data is untrusted: set text and href as DOM properties so a value
+           containing quotes or markup can never become an element or a handler. A non-mailto
+           scheme is refused outright rather than linked. */
+        var mailTd = el('td');
+        var addr = String(l.email == null ? '' : l.email).trim();
+        if (/^[^\s<>"'@]+@[^\s<>"'@]+\.[^\s<>"'@]+$/.test(addr)) {
+          var a = document.createElement('a');
+          a.textContent = addr;
+          a.href = 'mailto:' + encodeURIComponent(addr).replace(/%40/g, '@');
+          mailTd.appendChild(a);
+        } else {
+          mailTd.textContent = addr;
+        }
+        x.appendChild(mailTd);
         x.appendChild(el('td', { text: l.sequence }));
         x.appendChild(el('td', { text: String(l.step), class: 'num' }));
         x.appendChild(el('td', { text: l.stage }));
