@@ -1,0 +1,1030 @@
+{
+  "$comment": "SAMPLE DATA. Every number below is illustrative, generated to exercise the dashboard — it is not a record of real outreach, and the company names, contact names and email addresses in `leads` are fictional. Replace with real exports before using this for any decision. See README.md § Swapping in real data.",
+  "dataMode": "sample",
+  "campaign": {
+    "name": "Monitored GLP-1",
+    "subtitle": "GLP-1 retailer & reseller acquisition",
+    "offer": "myLAB Box white-label at-home lab testing for GLP-1 programs",
+    "landingPage": "mylabboxweightloss.com",
+    "period": "Q3 2026",
+    "startDate": "2026-06-15",
+    "endDate": "2026-09-30",
+    "asOf": "2026-07-29",
+    "weekIndex": 7,
+    "weeksTotal": 15
+  },
+  "kpis": [
+    {
+      "id": "pipeline",
+      "label": "Pipeline created",
+      "value": 2050000,
+      "target": 2100000,
+      "format": "currency",
+      "deltaLabel": "vs last week",
+      "hero": true
+    },
+    {
+      "id": "contacted",
+      "label": "Prospects contacted",
+      "value": 1050,
+      "target": 1800,
+      "format": "int",
+      "deltaLabel": "vs last week"
+    },
+    {
+      "id": "replyRate",
+      "label": "Reply rate",
+      "value": 8.9,
+      "target": 9.0,
+      "format": "pct",
+      "deltaLabel": "vs last week"
+    },
+    {
+      "id": "posReply",
+      "label": "Positive reply rate",
+      "value": 3.4,
+      "target": 3.4,
+      "format": "pct",
+      "deltaLabel": "vs last week"
+    },
+    {
+      "id": "meetings",
+      "label": "Meetings booked",
+      "value": 28,
+      "target": 96,
+      "format": "int",
+      "deltaLabel": "vs last week"
+    },
+    {
+      "id": "sqls",
+      "label": "SQLs",
+      "value": 16,
+      "target": 54,
+      "format": "int",
+      "deltaLabel": "vs last week"
+    }
+  ],
+  "funnel": [
+    {
+      "stage": "Sourced",
+      "value": 2140,
+      "note": "Accounts researched and list-qualified"
+    },
+    {
+      "stage": "Contacted",
+      "value": 1050,
+      "note": "Entered a sequence, first touch sent"
+    },
+    {
+      "stage": "Engaged",
+      "value": 368,
+      "note": "Opened, accepted a connection, or viewed back"
+    },
+    {
+      "stage": "Replied",
+      "value": 93,
+      "note": "Any human reply"
+    },
+    {
+      "stage": "Meeting",
+      "value": 28,
+      "note": "Discovery call on the calendar"
+    }
+  ],
+  "segmentTargetNote": "targetContacted sums to 1800, targetMeetings to 96, targetSqls to 54, targetPipeline to 2100000 — the campaign totals in `kpis`. Rate targets (reply, positive reply) are campaign-wide and apply unchanged to every segment.",
+  "segments": [
+    {
+      "id": "S1",
+      "name": "Weight loss clinics & med spas",
+      "orgType": "Medical weight loss clinic",
+      "motion": "A",
+      "tier": 3,
+      "sequence": "SEQ-A",
+      "sourced": 820,
+      "contacted": 512,
+      "engaged": 168,
+      "replied": 47,
+      "positive": 17,
+      "meetings": 11,
+      "sqls": 6,
+      "pipeline": 310000,
+      "avgDealSize": 22000,
+      "cycleDays": 28,
+      "targetContacted": 820,
+      "targetMeetings": 42,
+      "targetSqls": 22,
+      "targetPipeline": 460000
+    },
+    {
+      "id": "S2",
+      "name": "Telehealth platforms",
+      "orgType": "Telehealth platform",
+      "motion": "A/B",
+      "tier": 2,
+      "sequence": "SEQ-B",
+      "sourced": 310,
+      "contacted": 148,
+      "engaged": 57,
+      "replied": 14,
+      "positive": 6,
+      "meetings": 5,
+      "sqls": 3,
+      "pipeline": 430000,
+      "avgDealSize": 120000,
+      "cycleDays": 84,
+      "targetContacted": 260,
+      "targetMeetings": 16,
+      "targetSqls": 10,
+      "targetPipeline": 420000
+    },
+    {
+      "id": "S3",
+      "name": "Pharmacies",
+      "orgType": "Pharmacy",
+      "motion": "B",
+      "tier": 2,
+      "sequence": "SEQ-B",
+      "sourced": 430,
+      "contacted": 168,
+      "engaged": 54,
+      "replied": 13,
+      "positive": 5,
+      "meetings": 4,
+      "sqls": 2,
+      "pipeline": 215000,
+      "avgDealSize": 74000,
+      "cycleDays": 76,
+      "targetContacted": 290,
+      "targetMeetings": 14,
+      "targetSqls": 7,
+      "targetPipeline": 260000
+    },
+    {
+      "id": "S4",
+      "name": "Employers & benefits",
+      "orgType": "Employer / benefits program",
+      "motion": "B",
+      "tier": 1,
+      "sequence": "SEQ-C",
+      "sourced": 145,
+      "contacted": 52,
+      "engaged": 22,
+      "replied": 4,
+      "positive": 2,
+      "meetings": 2,
+      "sqls": 1,
+      "pipeline": 395000,
+      "avgDealSize": 310000,
+      "cycleDays": 190,
+      "targetContacted": 120,
+      "targetMeetings": 5,
+      "targetSqls": 3,
+      "targetPipeline": 240000
+    },
+    {
+      "id": "S5",
+      "name": "Health systems",
+      "orgType": "Health system",
+      "motion": "B",
+      "tier": 1,
+      "sequence": "SEQ-C",
+      "sourced": 240,
+      "contacted": 96,
+      "engaged": 41,
+      "replied": 9,
+      "positive": 4,
+      "meetings": 4,
+      "sqls": 3,
+      "pipeline": 520000,
+      "avgDealSize": 165000,
+      "cycleDays": 210,
+      "targetContacted": 165,
+      "targetMeetings": 12,
+      "targetSqls": 8,
+      "targetPipeline": 520000
+    },
+    {
+      "id": "S6",
+      "name": "Gyms, clubs & wellness",
+      "orgType": "Other",
+      "motion": "B",
+      "tier": 2,
+      "sequence": "SEQ-B",
+      "sourced": 195,
+      "contacted": 74,
+      "engaged": 26,
+      "replied": 6,
+      "positive": 2,
+      "meetings": 2,
+      "sqls": 1,
+      "pipeline": 180000,
+      "avgDealSize": 96000,
+      "cycleDays": 112,
+      "targetContacted": 145,
+      "targetMeetings": 7,
+      "targetSqls": 4,
+      "targetPipeline": 200000
+    }
+  ],
+  "weekly": [
+    {
+      "week": "Jun 15",
+      "contacted": 42,
+      "replied": 2,
+      "meetings": 0,
+      "positive": 1,
+      "sqls": 0,
+      "pipeline": 90000
+    },
+    {
+      "week": "Jun 22",
+      "contacted": 96,
+      "replied": 6,
+      "meetings": 1,
+      "positive": 2,
+      "sqls": 1,
+      "pipeline": 175000
+    },
+    {
+      "week": "Jun 29",
+      "contacted": 134,
+      "replied": 11,
+      "meetings": 3,
+      "positive": 4,
+      "sqls": 2,
+      "pipeline": 255000
+    },
+    {
+      "week": "Jul 6",
+      "contacted": 168,
+      "replied": 14,
+      "meetings": 4,
+      "positive": 5,
+      "sqls": 2,
+      "pipeline": 310000
+    },
+    {
+      "week": "Jul 13",
+      "contacted": 192,
+      "replied": 17,
+      "meetings": 5,
+      "positive": 7,
+      "sqls": 3,
+      "pipeline": 375000
+    },
+    {
+      "week": "Jul 20",
+      "contacted": 204,
+      "replied": 20,
+      "meetings": 7,
+      "positive": 8,
+      "sqls": 4,
+      "pipeline": 530000
+    },
+    {
+      "week": "Jul 27",
+      "contacted": 214,
+      "replied": 23,
+      "meetings": 8,
+      "positive": 9,
+      "sqls": 4,
+      "pipeline": 315000
+    }
+  ],
+  "sequences": [
+    {
+      "id": "SEQ-A",
+      "name": "SMB Velocity",
+      "motion": "A — Provider Partnership",
+      "segments": ["S1"],
+      "days": 18,
+      "channel": "LinkedIn-primary",
+      "automation": "eligible",
+      "status": "running",
+      "active": 214,
+      "benchmarks": {
+        "accept": 32,
+        "open": 46,
+        "reply": 11,
+        "positive": 4.2,
+        "meeting": 2.4
+      },
+      "actuals": {
+        "accept": 29,
+        "open": 44,
+        "reply": 9.2,
+        "positive": 3.3,
+        "meeting": 2.1
+      },
+      "steps": [
+        {
+          "n": 1,
+          "day": 0,
+          "type": "VIEW",
+          "label": "Profile view",
+          "sent": 512,
+          "done": 512,
+          "inFlight": 0
+        },
+        {
+          "n": 2,
+          "day": 1,
+          "type": "CONNECT",
+          "label": "Invite + note (A1)",
+          "sent": 498,
+          "done": 145,
+          "inFlight": 61
+        },
+        {
+          "n": 3,
+          "day": 3,
+          "type": "IF",
+          "label": "Accepted?",
+          "sent": 145,
+          "done": 145,
+          "inFlight": 0
+        },
+        {
+          "n": 4,
+          "day": 3,
+          "type": "LI-MSG",
+          "label": "First message (A2)",
+          "sent": 145,
+          "done": 145,
+          "inFlight": 22
+        },
+        {
+          "n": 5,
+          "day": 7,
+          "type": "LI-MSG",
+          "label": "Value nudge (A3)",
+          "sent": 118,
+          "done": 118,
+          "inFlight": 19
+        },
+        {
+          "n": 6,
+          "day": 12,
+          "type": "LI-MSG",
+          "label": "Breakup (A4)",
+          "sent": 84,
+          "done": 84,
+          "inFlight": 14
+        },
+        {
+          "n": 7,
+          "day": 10,
+          "type": "EMAIL",
+          "label": "Email, non-accepters (A5)",
+          "sent": 288,
+          "done": 288,
+          "inFlight": 41
+        },
+        {
+          "n": 8,
+          "day": 14,
+          "type": "EMAIL",
+          "label": "Follow-up (A6)",
+          "sent": 201,
+          "done": 201,
+          "inFlight": 33
+        },
+        {
+          "n": 9,
+          "day": 18,
+          "type": "EMAIL",
+          "label": "Close the loop (A7)",
+          "sent": 156,
+          "done": 156,
+          "inFlight": 24
+        }
+      ]
+    },
+    {
+      "id": "SEQ-B",
+      "name": "Mid-Market Multichannel",
+      "motion": "A or B by volume",
+      "segments": ["S2", "S3", "S6"],
+      "days": 30,
+      "channel": "Email-primary, manual LinkedIn",
+      "automation": "email only",
+      "status": "running",
+      "active": 168,
+      "benchmarks": {
+        "accept": 28,
+        "open": 43,
+        "reply": 9,
+        "positive": 3.5,
+        "meeting": 2.0
+      },
+      "actuals": {
+        "accept": 26,
+        "open": 41,
+        "reply": 8.6,
+        "positive": 3.3,
+        "meeting": 2.8
+      },
+      "steps": [
+        {
+          "n": 1,
+          "day": 0,
+          "type": "TASK",
+          "label": "Research + trigger",
+          "sent": 390,
+          "done": 390,
+          "inFlight": 0
+        },
+        {
+          "n": 2,
+          "day": 0,
+          "type": "VIEW",
+          "label": "Manual profile view",
+          "sent": 390,
+          "done": 390,
+          "inFlight": 0
+        },
+        {
+          "n": 3,
+          "day": 1,
+          "type": "EMAIL",
+          "label": "Trigger opener (B1)",
+          "sent": 390,
+          "done": 390,
+          "inFlight": 48
+        },
+        {
+          "n": 4,
+          "day": 3,
+          "type": "TASK",
+          "label": "Connect + note (B2)",
+          "sent": 341,
+          "done": 341,
+          "inFlight": 39
+        },
+        {
+          "n": 5,
+          "day": 5,
+          "type": "EMAIL",
+          "label": "Segment case (B3)",
+          "sent": 318,
+          "done": 318,
+          "inFlight": 44
+        },
+        {
+          "n": 6,
+          "day": 8,
+          "type": "TASK",
+          "label": "LinkedIn message (B4)",
+          "sent": 224,
+          "done": 224,
+          "inFlight": 31
+        },
+        {
+          "n": 7,
+          "day": 12,
+          "type": "EMAIL",
+          "label": "Panel spec (B5)",
+          "sent": 262,
+          "done": 262,
+          "inFlight": 36
+        },
+        {
+          "n": 8,
+          "day": 16,
+          "type": "TASK",
+          "label": "Multithread",
+          "sent": 188,
+          "done": 171,
+          "inFlight": 17
+        },
+        {
+          "n": 9,
+          "day": 19,
+          "type": "EMAIL",
+          "label": "Second persona (B6)",
+          "sent": 171,
+          "done": 171,
+          "inFlight": 28
+        },
+        {
+          "n": 10,
+          "day": 24,
+          "type": "EMAIL",
+          "label": "Direct ask (B7)",
+          "sent": 134,
+          "done": 134,
+          "inFlight": 22
+        },
+        {
+          "n": 11,
+          "day": 30,
+          "type": "EMAIL",
+          "label": "Breakup (B8)",
+          "sent": 97,
+          "done": 97,
+          "inFlight": 18
+        }
+      ]
+    },
+    {
+      "id": "SEQ-C",
+      "name": "Enterprise ABM",
+      "motion": "B — Enterprise & Wholesale",
+      "segments": ["S4", "S5"],
+      "days": 45,
+      "channel": "Fully manual, sales-led",
+      "automation": "none",
+      "status": "running",
+      "active": 74,
+      "benchmarks": {
+        "accept": 24,
+        "open": 51,
+        "reply": 7,
+        "positive": 3.0,
+        "meeting": 1.8
+      },
+      "actuals": {
+        "accept": 22,
+        "open": 54,
+        "reply": 8.8,
+        "positive": 4.1,
+        "meeting": 4.1
+      },
+      "steps": [
+        {
+          "n": 1,
+          "day": 0,
+          "type": "TASK",
+          "label": "Account plan",
+          "sent": 148,
+          "done": 148,
+          "inFlight": 0
+        },
+        {
+          "n": 2,
+          "day": 1,
+          "type": "TASK",
+          "label": "Warm path check",
+          "sent": 148,
+          "done": 148,
+          "inFlight": 0
+        },
+        {
+          "n": 3,
+          "day": 2,
+          "type": "EMAIL",
+          "label": "Clinical persona (C1)",
+          "sent": 148,
+          "done": 148,
+          "inFlight": 21
+        },
+        {
+          "n": 4,
+          "day": 3,
+          "type": "TASK",
+          "label": "View + follow all",
+          "sent": 148,
+          "done": 148,
+          "inFlight": 0
+        },
+        {
+          "n": 5,
+          "day": 6,
+          "type": "EMAIL",
+          "label": "Economic persona (C2)",
+          "sent": 131,
+          "done": 131,
+          "inFlight": 24
+        },
+        {
+          "n": 6,
+          "day": 9,
+          "type": "TASK",
+          "label": "Connect + note (C3)",
+          "sent": 124,
+          "done": 124,
+          "inFlight": 18
+        },
+        {
+          "n": 7,
+          "day": 14,
+          "type": "EMAIL",
+          "label": "Point of view (C4)",
+          "sent": 108,
+          "done": 108,
+          "inFlight": 26
+        },
+        {
+          "n": 8,
+          "day": 18,
+          "type": "TASK",
+          "label": "LinkedIn / InMail (C5)",
+          "sent": 91,
+          "done": 91,
+          "inFlight": 19
+        },
+        {
+          "n": 9,
+          "day": 24,
+          "type": "TASK",
+          "label": "Exec-to-exec touch",
+          "sent": 62,
+          "done": 54,
+          "inFlight": 12
+        },
+        {
+          "n": 10,
+          "day": 30,
+          "type": "EMAIL",
+          "label": "Offer the SME (C6)",
+          "sent": 54,
+          "done": 54,
+          "inFlight": 14
+        },
+        {
+          "n": 11,
+          "day": 38,
+          "type": "TASK",
+          "label": "Physical / event touch",
+          "sent": 31,
+          "done": 24,
+          "inFlight": 9
+        },
+        {
+          "n": 12,
+          "day": 45,
+          "type": "EMAIL",
+          "label": "Honest close (C7)",
+          "sent": 24,
+          "done": 24,
+          "inFlight": 7
+        }
+      ]
+    },
+    {
+      "id": "SEQ-D",
+      "name": "Re-engagement",
+      "motion": "either",
+      "segments": ["S1", "S2", "S3", "S4", "S5", "S6"],
+      "days": 60,
+      "channel": "Email only",
+      "automation": "email only",
+      "status": "scheduled",
+      "active": 0,
+      "benchmarks": {
+        "accept": 0,
+        "open": 38,
+        "reply": 6,
+        "positive": 2.2,
+        "meeting": 1.1
+      },
+      "actuals": {
+        "accept": 0,
+        "open": 0,
+        "reply": 0,
+        "positive": 0,
+        "meeting": 0
+      },
+      "steps": [
+        {
+          "n": 1,
+          "day": 0,
+          "type": "TASK",
+          "label": "Verify role + suppression",
+          "sent": 0,
+          "done": 0,
+          "inFlight": 0
+        },
+        {
+          "n": 2,
+          "day": 1,
+          "type": "EMAIL",
+          "label": "New information (D1)",
+          "sent": 0,
+          "done": 0,
+          "inFlight": 0
+        },
+        {
+          "n": 3,
+          "day": 14,
+          "type": "EMAIL",
+          "label": "Peer signal (D2)",
+          "sent": 0,
+          "done": 0,
+          "inFlight": 0
+        },
+        {
+          "n": 4,
+          "day": 35,
+          "type": "EMAIL",
+          "label": "Changed offer (D3)",
+          "sent": 0,
+          "done": 0,
+          "inFlight": 0
+        },
+        {
+          "n": 5,
+          "day": 60,
+          "type": "EMAIL",
+          "label": "Permission to stop (D4)",
+          "sent": 0,
+          "done": 0,
+          "inFlight": 0
+        }
+      ]
+    }
+  ],
+  "leads": [
+    {
+      "account": "Northlight Aesthetics",
+      "contact": "Dana Whitfield",
+      "email": "dana.whitfield@northlightaesthetics.com",
+      "location": "Scottsdale, AZ",
+      "segment": "S1",
+      "persona": "Owner / Medical Director",
+      "sequence": "SEQ-A",
+      "step": 5,
+      "stage": "Replied",
+      "score": 9,
+      "value": 24000,
+      "lastTouch": "2026-07-27",
+      "sentiment": "positive"
+    },
+    {
+      "account": "Meridian Weight Care",
+      "contact": "Priya Raman",
+      "email": "p.raman@meridianweightcare.com",
+      "location": "Columbus, OH",
+      "segment": "S5",
+      "persona": "VP Clinical Operations",
+      "sequence": "SEQ-C",
+      "step": 7,
+      "stage": "Meeting",
+      "score": 11,
+      "value": 180000,
+      "lastTouch": "2026-07-28",
+      "sentiment": "positive"
+    },
+    {
+      "account": "Vante Health",
+      "contact": "Marcus Bell",
+      "email": "marcus.bell@vantehealth.com",
+      "location": "Remote / DTC",
+      "segment": "S2",
+      "persona": "Head of Product",
+      "sequence": "SEQ-B",
+      "step": 7,
+      "stage": "Meeting",
+      "score": 10,
+      "value": 135000,
+      "lastTouch": "2026-07-28",
+      "sentiment": "positive"
+    },
+    {
+      "account": "Calder Family Pharmacy",
+      "contact": "Ellen Ruiz",
+      "email": "eruiz@calderfamilyrx.com",
+      "location": "Boise, ID",
+      "segment": "S3",
+      "persona": "Pharmacist-in-Charge",
+      "sequence": "SEQ-B",
+      "step": 5,
+      "stage": "Engaged",
+      "score": 7,
+      "value": 68000,
+      "lastTouch": "2026-07-26",
+      "sentiment": "neutral"
+    },
+    {
+      "account": "Ridgeline Clubs",
+      "contact": "Tom Okafor",
+      "email": "t.okafor@ridgelineclubs.com",
+      "location": "Denver, CO",
+      "segment": "S6",
+      "persona": "VP Health Services",
+      "sequence": "SEQ-B",
+      "step": 6,
+      "stage": "Replied",
+      "score": 8,
+      "value": 96000,
+      "lastTouch": "2026-07-27",
+      "sentiment": "positive"
+    },
+    {
+      "account": "Braewood Benefits",
+      "contact": "Susan Ilg",
+      "email": "silg@braewoodbenefits.com",
+      "location": "Hartford, CT",
+      "segment": "S4",
+      "persona": "Director, Total Rewards",
+      "sequence": "SEQ-C",
+      "step": 5,
+      "stage": "Engaged",
+      "score": 8,
+      "value": 310000,
+      "lastTouch": "2026-07-24",
+      "sentiment": "neutral"
+    },
+    {
+      "account": "Lumen Med Spa Group",
+      "contact": "Rosa Delgado",
+      "email": "rosa@lumenmedspa.com",
+      "location": "Tampa, FL",
+      "segment": "S1",
+      "persona": "Practice Manager",
+      "sequence": "SEQ-A",
+      "step": 4,
+      "stage": "Engaged",
+      "score": 6,
+      "value": 31000,
+      "lastTouch": "2026-07-28",
+      "sentiment": "neutral"
+    },
+    {
+      "account": "Ashbury Clinical",
+      "contact": "Alan Voss",
+      "email": "a.voss@ashburyclinical.com",
+      "location": "Raleigh, NC",
+      "segment": "S5",
+      "persona": "Chief Medical Officer",
+      "sequence": "SEQ-C",
+      "step": 9,
+      "stage": "Meeting",
+      "score": 10,
+      "value": 220000,
+      "lastTouch": "2026-07-25",
+      "sentiment": "positive"
+    },
+    {
+      "account": "Solace Telehealth",
+      "contact": "Nadia Chen",
+      "email": "nadia.chen@solacetelehealth.com",
+      "location": "Remote / DTC",
+      "segment": "S2",
+      "persona": "VP Clinical",
+      "sequence": "SEQ-B",
+      "step": 3,
+      "stage": "Contacted",
+      "score": 5,
+      "value": 110000,
+      "lastTouch": "2026-07-29",
+      "sentiment": "unknown"
+    },
+    {
+      "account": "Harbor Point Rx",
+      "contact": "Greg Mallory",
+      "email": "gmallory@harborpointrx.com",
+      "location": "Portland, ME",
+      "segment": "S3",
+      "persona": "Director, Clinical Services",
+      "sequence": "SEQ-B",
+      "step": 9,
+      "stage": "Replied",
+      "score": 7,
+      "value": 74000,
+      "lastTouch": "2026-07-23",
+      "sentiment": "negative"
+    },
+    {
+      "account": "Kestrel Wellness",
+      "contact": "Ivy Brandt",
+      "email": "ivy.brandt@kestrelwellness.com",
+      "location": "Austin, TX",
+      "segment": "S6",
+      "persona": "Chief Product Officer",
+      "sequence": "SEQ-B",
+      "step": 4,
+      "stage": "Contacted",
+      "score": 5,
+      "value": 88000,
+      "lastTouch": "2026-07-29",
+      "sentiment": "unknown"
+    },
+    {
+      "account": "Verdant Aesthetics",
+      "contact": "Lena Ortiz",
+      "email": "lena@verdantaesthetics.com",
+      "location": "San Diego, CA",
+      "segment": "S1",
+      "persona": "Owner / Medical Director",
+      "sequence": "SEQ-A",
+      "step": 7,
+      "stage": "Replied",
+      "score": 8,
+      "value": 19000,
+      "lastTouch": "2026-07-26",
+      "sentiment": "positive"
+    },
+    {
+      "account": "Sightline Health Plans",
+      "contact": "Ray Kimura",
+      "email": "r.kimura@sightlinehealth.com",
+      "location": "Des Moines, IA",
+      "segment": "S4",
+      "persona": "Chief Medical Officer",
+      "sequence": "SEQ-C",
+      "step": 3,
+      "stage": "Contacted",
+      "score": 6,
+      "value": 275000,
+      "lastTouch": "2026-07-29",
+      "sentiment": "unknown"
+    },
+    {
+      "account": "Cordova Weight Clinics",
+      "contact": "Blake Ferris",
+      "email": "bferris@cordovaweight.com",
+      "location": "Phoenix, AZ",
+      "segment": "S5",
+      "persona": "Chief Growth Officer",
+      "sequence": "SEQ-C",
+      "step": 6,
+      "stage": "Engaged",
+      "score": 7,
+      "value": 145000,
+      "lastTouch": "2026-07-22",
+      "sentiment": "neutral"
+    },
+    {
+      "account": "Brightleaf Med Spa",
+      "contact": "Casey Nolan",
+      "email": "casey@brightleafmedspa.com",
+      "location": "Nashville, TN",
+      "segment": "S1",
+      "persona": "Owner / Medical Director",
+      "sequence": "SEQ-A",
+      "step": 9,
+      "stage": "Contacted",
+      "score": 4,
+      "value": 16000,
+      "lastTouch": "2026-07-21",
+      "sentiment": "negative"
+    },
+    {
+      "account": "Anvil Fitness Group",
+      "contact": "Dee Whitaker",
+      "email": "d.whitaker@anvilfitness.com",
+      "location": "Chicago, IL",
+      "segment": "S6",
+      "persona": "Head of Member Experience",
+      "sequence": "SEQ-B",
+      "step": 10,
+      "stage": "Replied",
+      "score": 7,
+      "value": 104000,
+      "lastTouch": "2026-07-27",
+      "sentiment": "positive"
+    }
+  ],
+  "weeklyBySegment": {
+    "S1": {
+      "contacted": [20, 47, 66, 82, 94, 99, 104],
+      "replied": [1, 3, 5, 7, 9, 10, 12],
+      "positive": [1, 1, 2, 2, 3, 4, 4],
+      "meetings": [0, 0, 1, 2, 2, 3, 3],
+      "sqls": [0, 0, 1, 1, 1, 2, 1],
+      "pipeline": [13610, 26463, 38561, 46879, 56707, 80146, 47634]
+    },
+    "S2": {
+      "contacted": [6, 13, 19, 24, 27, 29, 30],
+      "replied": [1, 1, 2, 2, 2, 3, 3],
+      "positive": [0, 0, 1, 1, 1, 1, 2],
+      "meetings": [0, 0, 1, 1, 1, 1, 1],
+      "sqls": [0, 0, 0, 0, 1, 1, 1],
+      "pipeline": [18878, 36707, 53488, 65024, 78659, 111171, 66073]
+    },
+    "S3": {
+      "contacted": [7, 15, 21, 27, 31, 33, 34],
+      "replied": [0, 1, 2, 2, 2, 3, 3],
+      "positive": [0, 0, 1, 1, 1, 1, 1],
+      "meetings": [0, 0, 0, 1, 1, 1, 1],
+      "sqls": [0, 0, 1, 0, 0, 0, 1],
+      "pipeline": [9439, 18354, 26744, 32512, 39329, 55585, 33037]
+    },
+    "S4": {
+      "contacted": [2, 5, 7, 8, 9, 10, 11],
+      "replied": [0, 0, 0, 1, 1, 1, 1],
+      "positive": [0, 0, 0, 0, 0, 1, 1],
+      "meetings": [0, 0, 0, 0, 0, 1, 1],
+      "sqls": [0, 0, 0, 1, 0, 0, 0],
+      "pipeline": [17341, 33720, 49134, 59732, 72256, 102122, 60695]
+    },
+    "S5": {
+      "contacted": [4, 9, 12, 15, 17, 19, 20],
+      "replied": [0, 1, 1, 1, 2, 2, 2],
+      "positive": [0, 0, 0, 1, 1, 1, 1],
+      "meetings": [0, 0, 1, 0, 1, 1, 1],
+      "sqls": [0, 0, 0, 0, 1, 1, 1],
+      "pipeline": [22830, 44390, 64683, 78634, 95122, 134439, 79902]
+    },
+    "S6": {
+      "contacted": [3, 7, 9, 12, 14, 14, 15],
+      "replied": [0, 0, 1, 1, 1, 1, 2],
+      "positive": [0, 1, 0, 0, 1, 0, 0],
+      "meetings": [0, 1, 0, 0, 0, 0, 1],
+      "sqls": [0, 1, 0, 0, 0, 0, 0],
+      "pipeline": [7902, 15366, 22390, 27219, 32927, 46537, 27659]
+    }
+  },
+  "weeklyNote": "weeklyBySegment[segment][metric][weekIndex]. Every metric's matrix has exact margins: each segment's row sums to that segment's total, and each week's column sums to the campaign total in `weekly`. Filtered weekly trends therefore always agree with the KPI tiles. build.mjs enforces both margins."
+}

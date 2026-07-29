@@ -1,0 +1,22 @@
+name = "mylabbox-partner-intake"
+main = "src/worker.js"
+compatibility_date = "2026-07-01"
+
+# Durable store for submissions and the per-IP rate-limit counters.
+# Create it first, then paste the id here:
+#   npx wrangler kv namespace create INQUIRIES
+[[kv_namespaces]]
+binding = "INQUIRIES"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+# Comma-separated. The Worker rejects POSTs from any other origin.
+ALLOWED_ORIGINS = "https://mylabboxweightloss.com,https://www.mylabboxweightloss.com"
+# Where the notification lands. Leave NOTIFY_TO unset to skip email entirely —
+# submissions are still persisted to KV.
+NOTIFY_TO = ""
+NOTIFY_FROM = "inquiries@mylabboxweightloss.com"
+
+# Secrets — never put these in this file, set them with:
+#   npx wrangler secret put RESEND_API_KEY
+#   npx wrangler secret put WEBHOOK_URL      # optional: Slack / Zapier / CRM
