@@ -88,8 +88,9 @@ GitNexus.sln
 .claude/agents/
 .claude/commands/
 .claude/helpers
-.claude/skills/
+.claude/skills/*
 !.claude/skills/gitnexus/
+!.claude/skills/gsap/
 
 .history/
 
