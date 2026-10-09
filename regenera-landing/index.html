@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regenera</title>
+<style>
+  :root {
+    --video-opacity: 0.4;
+  }
+  html, body { margin: 0; height: 100%; background: #ffffff; overflow: hidden; }
+  a { color: #111111; }
+  a:hover { color: #000000; }
+
+  @keyframes logoInk {
+    from { filter: invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.9)); }
+    to   { filter: invert(0) drop-shadow(0 0 18px rgba(255,255,255,0.9)); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .landing {
+    position: fixed; inset: 0; background: #ffffff;
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .landing__video, .landing__canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; opacity: var(--video-opacity);
+  }
+  .landing__video { object-fit: cover; }
+  /* Once WebGL is drawing frames, the canvas replaces the raw video. */
+  .landing.is-gl .landing__video { opacity: 0; }
+
+  .landing__content {
+    position: relative; display: flex; flex-direction: column;
+    align-items: center; gap: 40px; animation: fadeIn 1.6s ease-out both;
+  }
+  .landing__logo {
+    display: block; width: min(62vw, 420px); height: auto;
+    filter: invert(1) drop-shadow(0 0 18px rgba(255,255,255,0.9));
+    animation: logoInk 6s ease-in-out 0.8s forwards;
+  }
+  .landing__enter { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+  .landing__rule { width: 1px; height: 40px; background: #111111; opacity: 0.6; }
+  .landing__link {
+    font-family: 'Helvetica Neue', Helvetica, sans-serif; font-size: 12px;
+    letter-spacing: 0.4em; text-decoration: none; color: #111111;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing__content { animation: none; }
+    .landing__logo { animation: none; filter: drop-shadow(0 0 18px rgba(255,255,255,0.9)); }
+  }
+</style>
+</head>
+<body>
+<main class="landing" data-screen-label="Landing">
+  <video class="landing__video" src="assets/bg-video-4k-v2.mp4" autoplay muted loop playsinline></video>
+  <canvas class="landing__canvas"></canvas>
+  <div class="landing__content">
+    <img class="landing__logo" src="assets/regenera-logo.png" alt="Regenera">
+    <div class="landing__enter">
+      <div class="landing__rule"></div>
+      <a class="landing__link" href="#">ENTER</a>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  // Tunables carried over from the design's props (percent values).
+  var CONFIG = {
+    videoOpacity: 40,
+    videoSpeed: 80,
+    rippleStrength: 25,
+    showEnter: true
+  };
+
+  var root = document.querySelector('.landing');
+  var video = root.querySelector('.landing__video');
+  var canvas = root.querySelector('.landing__canvas');
+
+  root.style.setProperty('--video-opacity', CONFIG.videoOpacity / 100);
+  if (!CONFIG.showEnter) root.querySelector('.landing__enter').remove();
+
+  function playVideo() {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.defaultPlaybackRate = video.playbackRate = CONFIG.videoSpeed / 100;
+    video.play().catch(function () {});
+  }
+  playVideo();
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var gl = canvas.getContext('webgl', { premultipliedAlpha: false });
+  if (!gl) return;
+
+  var MAX = 24;
+  var vs = 'attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;uv.y=1.-uv.y;gl_Position=vec4(p,0,1);}';
+  var fs =
+    'precision mediump float;varying vec2 uv;uniform sampler2D t;uniform vec2 res,vres;uniform float now;uniform vec4 rp[' + MAX + '];' +
+    'void main(){vec2 px=uv*res;vec2 off=vec2(0.);' +
+    'for(int i=0;i<' + MAX + ';i++){vec4 r=rp[i];float age=now-r.z;if(r.w<=0.||age<0.||age>2.4)continue;' +
+    'vec2 d=px-r.xy;float dist=length(d);float front=age*420.;float k=dist-front;' +
+    'float w=exp(-k*k/1800.)*sin(k*.09)*(1.-age/2.4)*r.w;off+=normalize(d+.0001)*w*14.;}' +
+    'vec2 q=(px+off)/res;float ca=res.x/res.y,va=vres.x/max(vres.y,1.);vec2 s=ca>va?vec2(1.,va/ca):vec2(ca/va,1.);' +
+    'q=(q-.5)*s+.5;gl_FragColor=texture2D(t,clamp(q,0.,1.));}';
+
+  function shader(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  var program = gl.createProgram();
+  gl.attachShader(program, shader(gl.VERTEX_SHADER, vs));
+  gl.attachShader(program, shader(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+  gl.useProgram(program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(program, 'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+  var uRes = gl.getUniformLocation(program, 'res');
+  var uVres = gl.getUniformLocation(program, 'vres');
+  var uNow = gl.getUniformLocation(program, 'now');
+  var uRp = gl.getUniformLocation(program, 'rp');
+
+  var ripples = new Float32Array(MAX * 4);
+  var idx = 0, last = 0, lx = -1e4, ly = -1e4;
+  var t0 = performance.now();
+  function now() { return (performance.now() - t0) / 1000; }
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+  function addRipple(x, y, strength) {
+    ripples.set([x * dpr, y * dpr, now(), strength], (idx++ % MAX) * 4);
+  }
+
+  if (!reduceMotion) {
+    window.addEventListener('pointermove', function (e) {
+      var t = performance.now();
+      if (t - last > 70 && Math.hypot(e.clientX - lx, e.clientY - ly) > 24) {
+        last = t; lx = e.clientX; ly = e.clientY;
+        addRipple(e.clientX, e.clientY, CONFIG.rippleStrength / 100);
+      }
+    });
+    window.addEventListener('pointerdown', function (e) {
+      addRipple(e.clientX, e.clientY, CONFIG.rippleStrength / 50);
+    });
+  }
+
+  var ready = false;
+  function frame() {
+    requestAnimationFrame(frame);
+    var w = Math.round(canvas.clientWidth * dpr);
+    var h = Math.round(canvas.clientHeight * dpr);
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w; canvas.height = h;
+      gl.viewport(0, 0, w, h);
+    }
+    if (video.readyState >= 2) {
+      try {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+      } catch (err) {
+        return;
+      }
+      if (!ready) { ready = true; root.classList.add('is-gl'); }
+    }
+    if (!ready) return;
+    gl.uniform2f(uRes, w, h);
+    gl.uniform2f(uVres, video.videoWidth, video.videoHeight);
+    gl.uniform1f(uNow, now());
+    gl.uniform4fv(uRp, ripples);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>
