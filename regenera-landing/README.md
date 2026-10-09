@@ -4,7 +4,9 @@ Static landing page built from the Claude Design file `Regenera Landing.dc.html`
 
 - `index.html`: the page (plain HTML/CSS/JS, no build step, no dependencies)
 - `assets/regenera-logo.png`: logo, resized from the 4500px source to 1260px
-- `assets/bg-video-4k-v2.mp4`: background video (H.264, 1920x1080)
+- `assets/bg-video-loop.mp4`: background video (H.264, 1920x1080, 8.5s). Re-cut from
+  the 10s source so its last 1.5s crossfade into the opening, which makes the
+  `loop` restart seamless
 
 ## Run locally
 

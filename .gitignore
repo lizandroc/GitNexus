@@ -55,6 +55,7 @@ HANDOFF*.md
 
 # Assets (screenshots, images)
 assets/
+!regenera-landing/assets/
 
 # Generated files (should not be indexed)
 repomix-output*
